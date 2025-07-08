@@ -3,7 +3,14 @@
 interface PestControlData {
   date: string;
   municipality: string;
+  district: string;
+  workerName: string;
+  controlType: string;
   siteCounts: { [key: string]: number };
+  bgTraps: { isPositive: boolean; count: number };
+  smartTraps: { isPositive: boolean; count: number };
+  comment?: string;
+  coordinates?: { latitude: number; longitude: number };
 }
 
 const municipalities = [
@@ -12,8 +19,78 @@ const municipalities = [
   "الشرائع",
   "العتيبة",
   "الزيمة",
-  "المشاعر",
+  "المشاعر المقدسة",
 ];
+
+export const districtsByMunicipality = {
+  "بلدية الشرائع": [
+    "المقام",
+    "أحد",
+    "الثنية",
+    "الصفا",
+    "الكوثر",
+    "العسيلة",
+    "الخضراء",
+    "معاد",
+    "المغمس",
+    "التروية",
+    "زمزم",
+    "الشرائع",
+    "اليمامة",
+    "السلام",
+    "الراشدية",
+    "بدر",
+    "جعرانة",
+    "البركة",
+    "حنين",
+    "الحطيم",
+    "الصفا الشرقي",
+    "البيعة",
+    "حنين الشمالي",
+  ],
+  "بلدية المعابدة": [
+    "المعابدة",
+    "وادي جليل",
+    "السليمانية الشرقي",
+    "الخنساء",
+    "جبل النور",
+    "قرطبة",
+    "الجميزة",
+    "العدل",
+    "ريع أذاخر",
+    "الروضة",
+  ],
+  "بلدية العتيبة": [
+    "النزهة",
+    "الزاهر",
+    "الضيافة",
+    "الزهراء",
+    "التيسير",
+    "السليمانية الغربي",
+    "الحجون",
+    "البيبان",
+    "العتيبية",
+    "الأندلس",
+    "الشهداء",
+  ],
+  "بلدية العزيزية": [
+    "العوالي",
+    "الهجرة",
+    "الجامعة",
+    "السنابل",
+    "ملكان",
+    "الحسينية",
+    "الصفرة",
+    "وادي نعمان",
+    "العزيزية",
+    "النسيم",
+  ],
+  "بلدية الزيمة": ["حنين", "الحطيم", "البيعة", "الصفا الشرقي"],
+  "المشاعر المقدسة": ["منى", "مزدلفة", "عرفات"],
+};
+
+export const controlTypes = ["يرقي", "بالغ", "مكافحة وقائية"];
+
 const siteTypes = [
   "المواقع المستكشفة",
   "المواقع السلبية",
@@ -41,6 +118,9 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
     id: "1",
     date: "2025-01-13",
     municipality: "العزيزية",
+    district: "العزيزية",
+    workerName: "أحمد محمد",
+    controlType: "مكافحة وقائية",
     siteCounts: {
       "المواقع المستكشفة": 25,
       "المواقع السلبية": 18,
@@ -60,12 +140,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 8,
       "بلاغات 940": 4,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 146,
   },
   {
     id: "2",
     date: "2025-01-13",
     municipality: "المعابدة",
+    district: "المعابدة",
+    workerName: "محمد علي",
+    controlType: "بالغ",
     siteCounts: {
       "المواقع المستكشفة": 32,
       "المواقع السلبية": 22,
@@ -85,12 +170,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 12,
       "بلاغات 940": 6,
     },
+    bgTraps: { isPositive: true, count: 3 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 188,
   },
   {
     id: "3",
     date: "2025-01-13",
     municipality: "الشرائع",
+    district: "الشرائع",
+    workerName: "علي أحمد",
+    controlType: "يرقي",
     siteCounts: {
       "المواقع المستكشفة": 28,
       "المواقع السلبية": 20,
@@ -110,12 +200,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 10,
       "بلاغات 940": 5,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: true, count: 2 },
     totalSites: 160,
   },
   {
     id: "4",
     date: "2025-01-13",
     municipality: "العتيبة",
+    district: "العتيبية",
+    workerName: "فاطمة محمد",
+    controlType: "مكافحة وقائية",
     siteCounts: {
       "المواقع المستكشفة": 35,
       "المواقع السلبية": 25,
@@ -135,12 +230,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 14,
       "بلاغات 940": 8,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 222,
   },
   {
     id: "5",
     date: "2025-01-13",
     municipality: "الزيمة",
+    district: "حنين",
+    workerName: "خالد عبدالله",
+    controlType: "بالغ",
     siteCounts: {
       "المواقع المستكشفة": 22,
       "المواقع السلبية": 16,
@@ -160,12 +260,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 6,
       "بلاغات 940": 3,
     },
+    bgTraps: { isPositive: true, count: 1 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 120,
   },
   {
     id: "6",
     date: "2025-01-13",
-    municipality: "المشاعر",
+    municipality: "المشاعر المقدسة",
+    district: "منى",
+    workerName: "عبدالرحمن محمد",
+    controlType: "يرقي",
     siteCounts: {
       "المواقع المستكشفة": 30,
       "المواقع السلبية": 21,
@@ -185,6 +290,8 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 9,
       "بلاغات 940": 5,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: true, count: 4 },
     totalSites: 172,
   },
 
@@ -194,6 +301,9 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
     id: "7",
     date: "2025-01-14",
     municipality: "العزيزية",
+    district: "العزيزية",
+    workerName: "أحمد محمد",
+    controlType: "مكافحة وقائية",
     siteCounts: {
       "المواقع المستكشفة": 27,
       "المواقع السلبية": 19,
@@ -213,12 +323,17 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 7,
       "بلاغات 940": 4,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 145,
   },
   {
     id: "8",
     date: "2025-01-14",
     municipality: "المعابدة",
+    district: "المعابدة",
+    workerName: "محمد علي",
+    controlType: "بالغ",
     siteCounts: {
       "المواقع المستكشفة": 30,
       "المواقع السلبية": 20,
@@ -238,6 +353,8 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 11,
       "بلاغات 940": 5,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 171,
   },
 
@@ -247,6 +364,9 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
     id: "20",
     date: "2025-01-20",
     municipality: "العزيزية",
+    district: "العزيزية",
+    workerName: "أحمد محمد",
+    controlType: "يرقي",
     siteCounts: {
       "المواقع المستكشفة": 23,
       "المواقع السلبية": 17,
@@ -266,6 +386,8 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 6,
       "بلاغات 940": 3,
     },
+    bgTraps: { isPositive: true, count: 2 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 122,
   },
 
@@ -274,6 +396,9 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
     id: "50",
     date: "2024-12-15",
     municipality: "العزيزية",
+    district: "العزيزية",
+    workerName: "أحمد محمد",
+    controlType: "مكافحة وقائية",
     siteCounts: {
       "المواقع المستكشفة": 20,
       "المواقع السلبية": 15,
@@ -293,6 +418,8 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 5,
       "بلاغات 940": 2,
     },
+    bgTraps: { isPositive: false, count: 0 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 101,
   },
 
@@ -301,6 +428,9 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
     id: "51",
     date: "2024-11-10",
     municipality: "المعابدة",
+    district: "المعابدة",
+    workerName: "محمد علي",
+    controlType: "بالغ",
     siteCounts: {
       "المواقع المستكشفة": 18,
       "المواقع السلبية": 13,
@@ -320,6 +450,8 @@ let mockData: (PestControlData & { id: string; totalSites: number })[] = [
       "الحالات المباشرة": 4,
       "بلاغات 940": 2,
     },
+    bgTraps: { isPositive: true, count: 1 },
+    smartTraps: { isPositive: false, count: 0 },
     totalSites: 85,
   },
 ];
@@ -357,7 +489,19 @@ function generateMockData() {
         id: `gen_${additionalData.length + 100}`,
         date: dateStr,
         municipality: district,
+        district: district,
+        workerName: "أحمد محمد",
+        controlType:
+          controlTypes[Math.floor(Math.random() * controlTypes.length)],
         siteCounts,
+        bgTraps: {
+          isPositive: Math.random() > 0.7,
+          count: Math.floor(Math.random() * 5),
+        },
+        smartTraps: {
+          isPositive: Math.random() > 0.8,
+          count: Math.floor(Math.random() * 3),
+        },
         totalSites,
       });
     }
@@ -447,6 +591,7 @@ export async function getPestControlData(filters: any): Promise<any> {
     dailyReports,
     weeklyReports,
     monthlyReports,
+    allReports: mockData, // Return all individual reports
     statistics: {
       daily: dailyStats,
       weekly: weeklyStats,

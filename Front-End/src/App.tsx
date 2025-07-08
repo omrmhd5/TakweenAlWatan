@@ -8,6 +8,7 @@ import {
   Calendar,
   MapPin,
   Building2,
+  Menu,
 } from "lucide-react";
 import FieldWorkerForm from "./components/FieldWorkerForm";
 import AdminLogin from "./components/AdminLogin";
@@ -21,6 +22,7 @@ function App() {
   const [currentView, setCurrentView] = useState<"home" | "form" | "admin">(
     "home"
   );
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
     <ToastProvider>
@@ -29,9 +31,9 @@ function App() {
         style={{ backgroundImage: "url(/BG.jpg)" }}>
         <div className="min-h-screen bg-white/90 backdrop-blur-sm">
           {/* Header */}
-          <header className="bg-white/95 backdrop-blur-sm shadow-lg border-b-4 border-blue-600">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-4">
+          <header className="bg-white/90 backdrop-blur-sm shadow-md sticky top-0 z-30">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center justify-between w-full md:w-auto">
                 <div className="flex items-center space-x-4 rtl:space-x-reverse">
                   <img
                     src="/Logo.png"
@@ -47,64 +49,89 @@ function App() {
                     </p>
                   </div>
                 </div>
-
-                <nav className="flex items-center space-x-4 rtl:space-x-reverse">
+                {/* Burger menu for mobile */}
+                <button
+                  className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 focus:outline-none"
+                  onClick={() => setMobileNavOpen((open) => !open)}
+                  aria-label="Open navigation menu">
+                  <Menu className="w-7 h-7" />
+                </button>
+              </div>
+              {/* Main nav links */}
+              <nav
+                className={`flex-col md:flex-row md:flex items-center space-y-2 md:space-y-0 md:space-x-4 rtl:space-x-reverse transition-all duration-200 md:static ${
+                  mobileNavOpen
+                    ? "flex absolute top-full left-0 w-full bg-white shadow-lg p-4 z-40"
+                    : "hidden md:flex"
+                }`}>
+                <button
+                  onClick={() => {
+                    setCurrentView("home");
+                    setMobileNavOpen(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    currentView === "home"
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}>
+                  الرئيسية
+                </button>
+                {/* Show form button only for non-authenticated users */}
+                {!isAuthenticated && (
                   <button
-                    onClick={() => setCurrentView("home")}
+                    onClick={() => {
+                      setCurrentView("form");
+                      setMobileNavOpen(false);
+                    }}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      currentView === "home"
+                      currentView === "form"
                         ? "bg-blue-600 text-white"
                         : "text-gray-700 hover:bg-gray-100"
                     }`}>
-                    الرئيسية
+                    إدخال البيانات
                   </button>
-
-                  {/* Show form button only for non-authenticated users */}
-                  {!isAuthenticated && (
+                )}
+                {!isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      setCurrentView("admin");
+                      setMobileNavOpen(false);
+                    }}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse ${
+                      currentView === "admin"
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}>
+                    <Shield className="w-4 h-4" />
+                    <span>لوحة الإدارة</span>
+                  </button>
+                ) : (
+                  <>
                     <button
-                      onClick={() => setCurrentView("form")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                        currentView === "form"
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}>
-                      إدخال البيانات
-                    </button>
-                  )}
-
-                  {!isAuthenticated ? (
-                    <button
-                      onClick={() => setCurrentView("admin")}
+                      onClick={() => {
+                        setCurrentView("admin");
+                        setMobileNavOpen(false);
+                      }}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse ${
                         currentView === "admin"
                           ? "bg-blue-600 text-white"
                           : "text-gray-700 hover:bg-gray-100"
                       }`}>
-                      <Shield className="w-4 h-4" />
+                      <BarChart3 className="w-4 h-4" />
                       <span>لوحة الإدارة</span>
                     </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setCurrentView("admin")}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center space-x-2 rtl:space-x-reverse ${
-                          currentView === "admin"
-                            ? "bg-blue-600 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}>
-                        <BarChart3 className="w-4 h-4" />
-                        <span>لوحة الإدارة</span>
-                      </button>
-                      <button
-                        onClick={logout}
-                        className="px-4 py-2 rounded-lg font-medium text-red-600 hover:bg-red-50 flex items-center space-x-2 rtl:space-x-reverse">
-                        <LogOut className="w-4 h-4" />
-                        <span>تسجيل الخروج</span>
-                      </button>
-                    </>
-                  )}
-                </nav>
-              </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileNavOpen(false);
+                      }}
+                      className="px-4 py-2 rounded-lg font-medium text-red-600 hover:bg-red-50 flex items-center space-x-2 rtl:space-x-reverse">
+                      <LogOut className="w-4 h-4" />
+                      <span>تسجيل الخروج</span>
+                    </button>
+                  </>
+                )}
+              </nav>
             </div>
           </header>
 
@@ -292,7 +319,7 @@ function HomePage({
             "الشرائع",
             "العتيبة",
             "الزيمة",
-            "المشاعر",
+            "المشاعر المقدسة",
           ].map((district, index) => (
             <div
               key={index}
