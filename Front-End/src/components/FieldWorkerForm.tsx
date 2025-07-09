@@ -120,13 +120,28 @@ export default function FieldWorkerForm() {
   ) => {
     if (field.startsWith("site_")) {
       const siteType = field.replace("site_", "");
-      setFormData((prev) => ({
-        ...prev,
-        siteCounts: {
-          ...prev.siteCounts,
-          [siteType]: Number(value),
-        },
-      }));
+      setFormData((prev) => {
+        let newValue = value;
+        if (
+          prev.siteCounts[siteType] === 0 &&
+          typeof value === "string" &&
+          value.length === 1 &&
+          value !== "0"
+        ) {
+          newValue = value; // replace 0 with new digit
+        } else if (typeof value === "string" && value === "") {
+          newValue = 0;
+        } else {
+          newValue = value;
+        }
+        return {
+          ...prev,
+          siteCounts: {
+            ...prev.siteCounts,
+            [siteType]: Number(newValue),
+          },
+        };
+      });
     } else if (
       field === "bgTraps.isPositive" ||
       field === "smartTraps.isPositive"
@@ -143,13 +158,28 @@ export default function FieldWorkerForm() {
       }));
     } else if (field === "bgTraps.count" || field === "smartTraps.count") {
       const trapType = field.split(".")[0] as "bgTraps" | "smartTraps";
-      setFormData((prev) => ({
-        ...prev,
-        [trapType]: {
-          ...prev[trapType],
-          count: Number(value),
-        },
-      }));
+      setFormData((prev) => {
+        let newValue = value;
+        if (
+          prev[trapType].count === 0 &&
+          typeof value === "string" &&
+          value.length === 1 &&
+          value !== "0"
+        ) {
+          newValue = value; // replace 0 with new digit
+        } else if (typeof value === "string" && value === "") {
+          newValue = 0;
+        } else {
+          newValue = value;
+        }
+        return {
+          ...prev,
+          [trapType]: {
+            ...prev[trapType],
+            count: Number(newValue),
+          },
+        };
+      });
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
@@ -256,7 +286,8 @@ export default function FieldWorkerForm() {
             <input
               type="date"
               value={formData.date}
-              max={new Date().toISOString().split("T")[0]}
+              min="2025-01-01"
+              max="2035-12-31"
               onChange={(e) => handleInputChange("date", e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
@@ -453,6 +484,8 @@ export default function FieldWorkerForm() {
                   <input
                     type="number"
                     min="0"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={formData.bgTraps.count}
                     onChange={(e) =>
                       handleInputChange("bgTraps.count", e.target.value)
@@ -513,6 +546,8 @@ export default function FieldWorkerForm() {
                   <input
                     type="number"
                     min="0"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={formData.smartTraps.count}
                     onChange={(e) =>
                       handleInputChange("smartTraps.count", e.target.value)
@@ -547,6 +582,8 @@ export default function FieldWorkerForm() {
                 <input
                   type="number"
                   min="0"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={formData.siteCounts[siteType]}
                   onChange={(e) =>
                     handleInputChange(`site_${siteType}`, e.target.value)

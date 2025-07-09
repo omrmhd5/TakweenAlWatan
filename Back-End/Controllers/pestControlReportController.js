@@ -1167,8 +1167,6 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       `attachment; filename*=UTF-8''${encodedFileName}`
     );
 
-    console.log("siteComments:", selectedReport.siteComments);
-
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {

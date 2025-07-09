@@ -353,7 +353,8 @@ export default function AdminDashboard() {
             </label>
             <input
               type="date"
-              max={today}
+              min="2025-01-01"
+              max="2035-12-31"
               value={searchFilters.startDate}
               onChange={(e) =>
                 setSearchFilters((prev) => ({
@@ -370,7 +371,8 @@ export default function AdminDashboard() {
             </label>
             <input
               type="date"
-              max={today}
+              min="2025-01-01"
+              max="2035-12-31"
               value={searchFilters.endDate}
               onChange={(e) =>
                 setSearchFilters((prev) => ({
