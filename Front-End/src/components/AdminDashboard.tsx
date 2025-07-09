@@ -585,7 +585,7 @@ export default function AdminDashboard() {
               {activeTab === "detailed"
                 ? currentReports
                     .sort(
-                      (a, b) =>
+                      (a: any, b: any) =>
                         new Date(b.date).getTime() - new Date(a.date).getTime()
                     )
                     .map((report: any, index: number) => (
@@ -763,7 +763,7 @@ function ReportModal({
     ).reduce((a: number, b: number) => a + b, 0);
     // Aggregate siteType counts by municipality
     const siteTypeTotals: Record<string, Record<string, number>> = {};
-    const districtCounts: Record<string, number> = {};
+    const municipalityCounts: Record<string, number> = {};
     const siteTypeCounts: Record<string, number> = {};
     report.reports.forEach((r: any) => {
       Object.entries(r.siteCounts || {}).forEach(([type, count]) => {
@@ -772,15 +772,17 @@ function ReportModal({
           (siteTypeTotals[type][r.municipality] || 0) + (count as number);
         siteTypeCounts[type] = (siteTypeCounts[type] || 0) + (count as number);
       });
-      districtCounts[r.district] = (districtCounts[r.district] || 0) + 1;
+      municipalityCounts[r.municipality] =
+        (municipalityCounts[r.municipality] || 0) + 1;
     });
     // Highest site type
     const highestSiteType = Object.entries(siteTypeCounts).sort(
       (a, b) => b[1] - a[1]
     )[0] || ["", 0];
-    // Most active district
-    const mostActiveDistrict =
-      Object.entries(districtCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    // Most active municipality
+    const mostActiveMunicipality =
+      Object.entries(municipalityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+      "";
     // Grand total
     const grandTotal = totalSites;
     // Compose modalStats
@@ -788,7 +790,7 @@ function ReportModal({
       ...report,
       totalSites,
       highestSite: { type: highestSiteType[0], count: highestSiteType[1] },
-      mostActiveDistrict,
+      mostActiveDistrict: mostActiveMunicipality,
       data: {
         siteTypeTotals,
         grandTotal,
