@@ -118,15 +118,13 @@ exports.getPestControlReports = async (req, res) => {
         reports: group,
       })
     );
-    // Statistics for most recent group
-    const mostRecentDay = getMostRecentKey(dailyGroups);
+    // Use today's date for daily stats
+    const todayISO = new Date().toISOString().split("T")[0];
+    const todayGroup = dailyGroups[todayISO];
     const mostRecentWeek = getMostRecentKey(weeklyGroups);
     const mostRecentMonth = getMostRecentKey(monthlyGroups);
     const statistics = {
-      daily: calcStats(
-        dailyGroups[mostRecentDay],
-        mostRecentDay ? getDateRange(dailyGroups[mostRecentDay]) : ""
-      ),
+      daily: calcStats(todayGroup, todayGroup ? getDateRange(todayGroup) : ""),
       weekly: calcStats(weeklyGroups[mostRecentWeek], mostRecentWeek),
       monthly: calcStats(monthlyGroups[mostRecentMonth], mostRecentMonth),
     };
@@ -295,8 +293,8 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
       for (const [groupKey, groupReports] of Object.entries(selectedGroups)) {
         if (type === "daily") {
-          const displayDate = new Date(groupKey).toLocaleDateString("ar-SA");
-          reportTitle = `تقرير يومي - ${displayDate}`;
+          // Display the date as the original Gregorian date (YYYY-MM-DD)
+          reportTitle = `تقرير يومي - ${groupKey}`;
           fileNameDate = groupKey;
         } else if (type === "weekly") {
           const [start, end] = groupKey.split("_");
@@ -676,13 +674,10 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       fgColor: { argb: "FFF8F9FA" },
     };
 
-    // Report title with enhanced styling
-    const reportDate = new Date(selectedReport.date).toLocaleDateString(
-      "ar-SA"
-    );
+    // Display the date as the original Gregorian date (YYYY-MM-DD)
     worksheet.mergeCells("A6:J6");
     const titleCell = worksheet.getCell("A6");
-    titleCell.value = `تقرير تفصيلي - ${reportDate}`;
+    titleCell.value = `تقرير تفصيلي - ${selectedReport.date}`;
     titleCell.font = {
       bold: true,
       size: 18,
@@ -705,7 +700,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Enhanced metadata section with card-style layout
     const metaStartRow = 8;
     const metaData = [
-      { label: "التاريخ", value: selectedReport.date, icon: "📅" },
+      { label: "التاريخ (ميلادي)", value: selectedReport.date, icon: "📅" },
       { label: "اسم الأخصائي", value: selectedReport.workerName, icon: "👨‍💼" },
       { label: "البلدية", value: selectedReport.municipality, icon: "🏢" },
       { label: "الحي", value: selectedReport.district, icon: "🏘️" },

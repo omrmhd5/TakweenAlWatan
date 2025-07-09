@@ -321,6 +321,32 @@ export default function AdminDashboard() {
     currentReports = dashboardData?.[`${activeTab}Reports`] || [];
   }
 
+  // Sort groups so the most recent is first
+  if (activeTab === "daily") {
+    currentReports = [...currentReports].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  } else if (activeTab === "weekly") {
+    // Sort by the start of the week (descending)
+    currentReports = [...currentReports].sort((a, b) => {
+      const aStart = a.reports?.[0]?.date
+        ? new Date(a.reports[0].date).getTime()
+        : 0;
+      const bStart = b.reports?.[0]?.date
+        ? new Date(b.reports[0].date).getTime()
+        : 0;
+      return bStart - aStart;
+    });
+  } else if (activeTab === "monthly") {
+    // Sort by year and month (descending)
+    currentReports = [...currentReports].sort((a, b) => {
+      const [aYear, aMonth] = a.month.split("-").map(Number);
+      const [bYear, bMonth] = b.month.split("-").map(Number);
+      if (bYear !== aYear) return bYear - aYear;
+      return bMonth - aMonth;
+    });
+  }
+
   let statsDateRange = currentStats?.dateRange;
   if (activeTab === "weekly") {
     statsDateRange = getCurrentWeekRange();
@@ -671,7 +697,8 @@ export default function AdminDashboard() {
                       )}`;
                       title = computedTitle;
                       const firstDay = `${year}-${month}-01`;
-                      const lastDay = new Date(Number(year), Number(month), 1)
+                      // Fix: get last day of month correctly
+                      const lastDay = new Date(Number(year), Number(month), 0)
                         .toISOString()
                         .split("T")[0];
                       dateRange = `${firstDay} إلى ${lastDay}`;
