@@ -141,15 +141,26 @@ export async function getPestControlData(filters: any): Promise<any> {
   return await res.json();
 }
 
-export async function exportReport(report: any, type: string): Promise<void> {
-  // Simulate export delay
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  // You can implement actual export logic here if needed
-  const reportInfo = {
-    type,
-    report: report?.title || "تقرير",
-    dateRange: report?.dateRange || "غير محدد",
-  };
-  // For now, just log to console
-  console.log("Report exported:", reportInfo);
+export async function exportReport(
+  report: any,
+  type: string,
+  filters: any = {}
+): Promise<void> {
+  const params = new URLSearchParams();
+  params.append("type", type);
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+  if (filters.districts && filters.districts.length > 0) {
+    filters.districts.forEach((d: string) => params.append("districts", d));
+  }
+  const url = `${API_URL}/export?${params.toString()}`;
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) throw new Error("Failed to export report");
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = window.URL.createObjectURL(blob);
+  a.download = `report_${type}_${Date.now()}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }

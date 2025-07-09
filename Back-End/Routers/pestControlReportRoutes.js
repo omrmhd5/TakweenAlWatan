@@ -8,4 +8,10 @@ router.post("/", pestControlReportController.submitPestControlReport);
 // Get reports (with filters via query)
 router.get("/", pestControlReportController.getPestControlReports);
 
+// Export reports as Excel
+router.get(
+  "/export",
+  pestControlReportController.exportPestControlReportsExcel
+);
+
 module.exports = router;

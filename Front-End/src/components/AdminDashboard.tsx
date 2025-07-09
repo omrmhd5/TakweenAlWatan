@@ -15,11 +15,7 @@ import {
   Search,
 } from "lucide-react";
 import { useToast } from "../contexts/ToastContext";
-import {
-  getPestControlData,
-  exportReport,
-  searchReports,
-} from "../services/api";
+import { getPestControlData, exportReport } from "../services/api";
 import ReactDOM from "react-dom";
 
 interface DashboardData {
@@ -174,7 +170,7 @@ export default function AdminDashboard() {
 
   const handleDownloadReport = async (report: any, type: string) => {
     try {
-      await exportReport(report, type);
+      await exportReport(report, type, filters);
       showToast(
         `تم تصدير التقرير ${
           type === "daily"
@@ -209,7 +205,7 @@ export default function AdminDashboard() {
 
   const handleDownloadDetailedReport = async (report: any) => {
     try {
-      await exportReport(report, "detailed");
+      await exportReport(report, "detailed", filters);
       showToast("تم تصدير التقرير المفصل بنجاح", "success");
     } catch (error) {
       showToast("حدث خطأ أثناء تصدير التقرير", "error");
@@ -271,20 +267,22 @@ export default function AdminDashboard() {
     const weeklyGroups = groupBy(filtered, getWeek);
     const monthlyGroups = groupBy(filtered, getMonth);
     // Prepare grouped arrays
-    const dailyReports = Object.values(dailyGroups).map((group) => ({
+    const dailyReports = (Object.values(dailyGroups) as any[]).map((group) => ({
       date: group[0].date,
       reports: group,
     }));
-    const weeklyReports = Object.entries(weeklyGroups).map(([week, group]) => ({
+    const weeklyReports = (
+      Object.entries(weeklyGroups) as [string, any[]][]
+    ).map(([week, group]) => ({
       week,
       reports: group,
     }));
-    const monthlyReports = Object.entries(monthlyGroups).map(
-      ([month, group]) => ({
-        month,
-        reports: group,
-      })
-    );
+    const monthlyReports = (
+      Object.entries(monthlyGroups) as [string, any[]][]
+    ).map(([month, group]) => ({
+      month,
+      reports: group,
+    }));
     // Set searchResults
     setSearchResults({
       dailyReports,
