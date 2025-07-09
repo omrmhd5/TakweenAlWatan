@@ -272,7 +272,28 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       let startRow = 6;
       let startCol = 1;
 
-      for (const [groupKey, groupReports] of Object.entries(groups)) {
+      // Determine the selected group key based on query
+      let selectedGroupKey;
+      if (type === "daily" && startDate) {
+        // Normalize to ISO format for matching
+        selectedGroupKey = new Date(startDate).toISOString().split("T")[0];
+      } else if (type === "weekly" && startDate && endDate) {
+        const format = (dt) => new Date(dt).toISOString().split("T")[0];
+        selectedGroupKey = `${format(startDate)}_${format(endDate)}`;
+      } else if (type === "monthly" && startDate) {
+        const d = new Date(startDate);
+        selectedGroupKey = `${d.getFullYear()}-${String(
+          d.getMonth() + 1
+        ).padStart(2, "0")}`;
+      }
+
+      // Only export the selected group if specified, otherwise export all (fallback)
+      const selectedGroups =
+        selectedGroupKey && groups[selectedGroupKey]
+          ? { [selectedGroupKey]: groups[selectedGroupKey] }
+          : groups;
+
+      for (const [groupKey, groupReports] of Object.entries(selectedGroups)) {
         if (type === "daily") {
           const displayDate = new Date(groupKey).toLocaleDateString("ar-SA");
           reportTitle = `تقرير يومي - ${displayDate}`;
@@ -553,6 +574,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
           pattern: "solid",
           fgColor: { argb: "FFF8F9FA" },
         };
+
+        // Increment startRow to avoid overlapping merges in the next group
+        startRow = footerRow + 3; // 3-row gap for spacing
       }
 
       // Set column widths

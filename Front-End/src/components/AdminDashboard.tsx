@@ -168,9 +168,13 @@ export default function AdminDashboard() {
     setShowModal(true);
   };
 
-  const handleDownloadReport = async (report: any, type: string) => {
+  const handleDownloadReport = async (
+    report: any,
+    type: string,
+    customFilters?: any
+  ) => {
     try {
-      await exportReport(report, type, filters);
+      await exportReport(report, type, customFilters || filters);
       showToast(
         `تم تصدير التقرير ${
           type === "daily"
@@ -697,7 +701,28 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             onClick={() =>
-                              handleDownloadReport(group, activeTab)
+                              handleDownloadReport(
+                                group,
+                                activeTab,
+                                activeTab === "daily"
+                                  ? { ...filters, startDate: group.date }
+                                  : activeTab === "weekly"
+                                  ? {
+                                      ...filters,
+                                      startDate: getWeekRange(
+                                        group.reports?.[0]?.date || ""
+                                      ).start,
+                                      endDate: getWeekRange(
+                                        group.reports?.[0]?.date || ""
+                                      ).end,
+                                    }
+                                  : activeTab === "monthly"
+                                  ? {
+                                      ...filters,
+                                      startDate: `${group.month}-01`,
+                                    }
+                                  : filters
+                              )
                             }
                             className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
                             <Download className="w-4 h-4" />
