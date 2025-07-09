@@ -121,7 +121,7 @@ export const districtsByMunicipality = {
 export async function submitPestControlData(
   data: PestControlData
 ): Promise<void> {
-  const res = await fetch(`${API_URL}`, {
+  const res = await fetch(`${API_URL}/api/reports`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -136,7 +136,7 @@ export async function getPestControlData(filters: any): Promise<any> {
   if (filters.districts && filters.districts.length > 0) {
     filters.districts.forEach((d: string) => params.append("districts", d));
   }
-  const res = await fetch(`${API_URL}?${params.toString()}`);
+  const res = await fetch(`${API_URL}/api/reports?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch pest control reports");
   return await res.json();
 }
@@ -154,7 +154,7 @@ export async function exportReport(
     filters.districts.forEach((d: string) => params.append("districts", d));
   }
   if (filters.id) params.append("id", filters.id);
-  const url = `${API_URL}/export?${params.toString()}`;
+  const url = `${API_URL}/api/reports/export?${params.toString()}`;
   const res = await fetch(url, { method: "GET" });
   if (!res.ok) throw new Error("Failed to export report");
   const blob = await res.blob();

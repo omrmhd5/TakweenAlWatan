@@ -15,7 +15,7 @@ export function useAuth() {
     password: string
   ): Promise<boolean> => {
     try {
-      const response = await axios.post(`${serverURL}/auth/login`, {
+      const response = await axios.post(`${serverURL}/api/auth/login`, {
         username,
         password,
       });
