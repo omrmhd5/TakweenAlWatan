@@ -15,10 +15,6 @@ import { useToast } from "../contexts/ToastContext";
 import { submitPestControlData } from "../services/api";
 import { districtsByMunicipality, controlTypes } from "../services/api";
 
-interface SiteCounts {
-  [key: string]: number;
-}
-
 interface Coordinates {
   latitude: number;
   longitude: number;
@@ -71,11 +67,11 @@ export default function FieldWorkerForm() {
     workerName: "",
     controlType: "",
     siteCounts: siteTypes.reduce(
-      (acc, site) => ({ ...acc, [site]: 0 }),
-      {} as SiteCounts
+      (acc, site) => ({ ...acc, [site]: "" }),
+      {} as { [key: string]: string }
     ),
-    bgTraps: { isPositive: false, count: 0 },
-    smartTraps: { isPositive: false, count: 0 },
+    bgTraps: { isPositive: false, count: "" },
+    smartTraps: { isPositive: false, count: "" },
     comment: "",
   });
 
@@ -123,22 +119,24 @@ export default function FieldWorkerForm() {
       setFormData((prev) => {
         let newValue = value;
         if (
-          prev.siteCounts[siteType] === 0 &&
+          prev.siteCounts[siteType] === "" &&
           typeof value === "string" &&
           value.length === 1 &&
           value !== "0"
         ) {
-          newValue = value; // replace 0 with new digit
+          newValue = value; // replace empty with new digit
         } else if (typeof value === "string" && value === "") {
-          newValue = 0;
-        } else {
-          newValue = value;
+          newValue = "";
+        } else if (typeof value === "number") {
+          newValue = value.toString();
+        } else if (typeof value === "boolean") {
+          newValue = value ? "1" : "0";
         }
         return {
           ...prev,
           siteCounts: {
             ...prev.siteCounts,
-            [siteType]: Number(newValue),
+            [siteType]: newValue as string,
           },
         };
       });
@@ -153,7 +151,7 @@ export default function FieldWorkerForm() {
         [trapType]: {
           ...prev[trapType],
           isPositive,
-          count: isPositive ? prev[trapType].count : 0,
+          count: isPositive ? prev[trapType].count : "",
         },
       }));
     } else if (field === "bgTraps.count" || field === "smartTraps.count") {
@@ -161,22 +159,24 @@ export default function FieldWorkerForm() {
       setFormData((prev) => {
         let newValue = value;
         if (
-          prev[trapType].count === 0 &&
+          prev[trapType].count === "" &&
           typeof value === "string" &&
           value.length === 1 &&
           value !== "0"
         ) {
-          newValue = value; // replace 0 with new digit
+          newValue = value; // replace empty with new digit
         } else if (typeof value === "string" && value === "") {
-          newValue = 0;
-        } else {
-          newValue = value;
+          newValue = "";
+        } else if (typeof value === "number") {
+          newValue = value.toString();
+        } else if (typeof value === "boolean") {
+          newValue = value ? "1" : "0";
         }
         return {
           ...prev,
           [trapType]: {
             ...prev[trapType],
-            count: Number(newValue),
+            count: newValue as string,
           },
         };
       });
@@ -193,11 +193,11 @@ export default function FieldWorkerForm() {
       workerName: "",
       controlType: "",
       siteCounts: siteTypes.reduce(
-        (acc, site) => ({ ...acc, [site]: 0 }),
-        {} as SiteCounts
+        (acc, site) => ({ ...acc, [site]: "" }),
+        {} as { [key: string]: string }
       ),
-      bgTraps: { isPositive: false, count: 0 },
-      smartTraps: { isPositive: false, count: 0 },
+      bgTraps: { isPositive: false, count: "" },
+      smartTraps: { isPositive: false, count: "" },
       comment: "",
     });
     setCustomDistrict("");
@@ -224,8 +224,27 @@ export default function FieldWorkerForm() {
 
     setIsSubmitting(true);
     try {
+      // Convert empty string number fields to 0 before submitting
       const submitData = {
         ...formData,
+        siteCounts: Object.fromEntries(
+          Object.entries(formData.siteCounts).map(([k, v]) => [
+            k,
+            v === "" ? 0 : Number(v),
+          ])
+        ),
+        bgTraps: {
+          ...formData.bgTraps,
+          count:
+            formData.bgTraps.count === "" ? 0 : Number(formData.bgTraps.count),
+        },
+        smartTraps: {
+          ...formData.smartTraps,
+          count:
+            formData.smartTraps.count === ""
+              ? 0
+              : Number(formData.smartTraps.count),
+        },
         coordinates: coordinates || undefined,
       };
       await submitPestControlData(submitData);
@@ -240,7 +259,7 @@ export default function FieldWorkerForm() {
   };
 
   const totalSites = Object.values(formData.siteCounts).reduce(
-    (sum, count) => sum + count,
+    (sum, count) => sum + (count === "" ? 0 : Number(count)),
     0
   );
 
@@ -644,8 +663,20 @@ export default function FieldWorkerForm() {
           workerName={formData.workerName}
           controlType={formData.controlType}
           totalSites={totalSites}
-          bgTraps={formData.bgTraps}
-          smartTraps={formData.smartTraps}
+          bgTraps={{
+            ...formData.bgTraps,
+            count:
+              formData.bgTraps.count === ""
+                ? 0
+                : Number(formData.bgTraps.count),
+          }}
+          smartTraps={{
+            ...formData.smartTraps,
+            count:
+              formData.smartTraps.count === ""
+                ? 0
+                : Number(formData.smartTraps.count),
+          }}
           comment={formData.comment}
           coordinates={coordinates}
           isSubmitting={isSubmitting}
