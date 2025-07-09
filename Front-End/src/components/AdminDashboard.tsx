@@ -104,6 +104,19 @@ function getCurrentMonthRange() {
   return `${format(start)} - ${format(end)}`;
 }
 
+function getWeekRange(dateStr: string) {
+  const date = new Date(dateStr);
+  // Find previous (or same) Sunday
+  const day = date.getDay();
+  const sunday = new Date(date);
+  sunday.setDate(date.getDate() - day);
+  // Saturday is 6 days after Sunday
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  const format = (d: Date) => d.toISOString().split("T")[0];
+  return { start: format(sunday), end: format(saturday) };
+}
+
 export default function AdminDashboard() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<
@@ -117,10 +130,10 @@ export default function AdminDashboard() {
   const [showModal, setShowModal] = useState(false);
   const [searchResults, setSearchResults] = useState<any>(null);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [detailedReports, setDetailedReports] = useState<any[]>([]);
   const [selectedDetailedReport, setSelectedDetailedReport] =
     useState<any>(null);
   const [showDetailedModal, setShowDetailedModal] = useState(false);
+  const [allReports, setAllReports] = useState<any[]>([]);
 
   const [filters, setFilters] = useState({
     startDate: "",
@@ -139,7 +152,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    loadDetailedReports();
   }, []);
 
   const loadDashboardData = async () => {
@@ -147,20 +159,11 @@ export default function AdminDashboard() {
     try {
       const data = await getPestControlData({});
       setDashboardData(data);
+      setAllReports(data.detailedReports || []);
     } catch (error) {
       showToast("حدث خطأ أثناء تحميل البيانات", "error");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadDetailedReports = async () => {
-    try {
-      const data = await getPestControlData({});
-      // Get all individual reports from mock data
-      setDetailedReports(data.allReports || []);
-    } catch (error) {
-      showToast("حدث خطأ أثناء تحميل التقارير المفصلة", "error");
     }
   };
 
@@ -218,12 +221,10 @@ export default function AdminDashboard() {
       showToast("يرجى تحديد تاريخ البداية على الأقل", "error");
       return;
     }
-
     if (new Date(searchFilters.startDate) > new Date(today)) {
       showToast("لا يمكن البحث في تواريخ مستقبلية", "error");
       return;
     }
-
     if (
       searchFilters.endDate &&
       new Date(searchFilters.startDate) > new Date(searchFilters.endDate)
@@ -231,15 +232,69 @@ export default function AdminDashboard() {
       showToast("تاريخ البداية يجب أن يكون قبل تاريخ النهاية", "error");
       return;
     }
-
-    try {
-      const results = await searchReports(searchFilters);
-      setSearchResults(results);
-      setShowSearchResults(true);
-      showToast(`تم العثور على ${results.totalReports} تقرير`, "success");
-    } catch (error) {
-      showToast("حدث خطأ أثناء البحث", "error");
-    }
+    // Filter allReports by date and municipalities
+    let filtered = allReports.filter((r) => {
+      const dateOk =
+        (!searchFilters.startDate || r.date >= searchFilters.startDate) &&
+        (!searchFilters.endDate || r.date <= searchFilters.endDate);
+      const muniOk =
+        searchFilters.districts.length === 0 ||
+        searchFilters.districts.includes(r.municipality);
+      return dateOk && muniOk;
+    });
+    // Grouping helpers
+    const groupBy = (arr: any[], keyFn: (r: any) => string) => {
+      return arr.reduce((acc, item) => {
+        const key = keyFn(item);
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+      }, {} as Record<string, any[]>);
+    };
+    const getDate = (r: any) => r.date;
+    const getWeek = (r: any) => {
+      const d = new Date(r.date);
+      const day = d.getDay();
+      const sunday = new Date(d);
+      sunday.setDate(d.getDate() - day);
+      const saturday = new Date(sunday);
+      saturday.setDate(sunday.getDate() + 6);
+      const format = (dt: Date) => dt.toISOString().split("T")[0];
+      return `${format(sunday)} إلى ${format(saturday)}`;
+    };
+    const getMonth = (r: any) => {
+      const d = new Date(r.date);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    };
+    // Group filtered reports
+    const dailyGroups = groupBy(filtered, getDate);
+    const weeklyGroups = groupBy(filtered, getWeek);
+    const monthlyGroups = groupBy(filtered, getMonth);
+    // Prepare grouped arrays
+    const dailyReports = Object.values(dailyGroups).map((group) => ({
+      date: group[0].date,
+      reports: group,
+    }));
+    const weeklyReports = Object.entries(weeklyGroups).map(([week, group]) => ({
+      week,
+      reports: group,
+    }));
+    const monthlyReports = Object.entries(monthlyGroups).map(
+      ([month, group]) => ({
+        month,
+        reports: group,
+      })
+    );
+    // Set searchResults
+    setSearchResults({
+      dailyReports,
+      weeklyReports,
+      monthlyReports,
+      detailedReports: filtered,
+      totalReports: filtered.length,
+    });
+    setShowSearchResults(true);
+    showToast(`تم العثور على ${filtered.length} تقرير`, "success");
   };
 
   if (isLoading) {
@@ -253,15 +308,16 @@ export default function AdminDashboard() {
     );
   }
 
-  const currentStats =
-    activeTab === "detailed" ? null : dashboardData?.statistics[activeTab];
-  const currentReports = showSearchResults
-    ? searchResults?.[`${activeTab}Reports`] || []
-    : activeTab === "detailed"
-    ? [...detailedReports].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-      )
-    : dashboardData?.[`${activeTab}Reports`] || [];
+  let currentStats =
+    activeTab === "detailed" ? null : dashboardData?.statistics?.[activeTab];
+  let currentReports = [];
+  if (showSearchResults) {
+    currentReports = searchResults?.[`${activeTab}Reports`] || [];
+  } else if (activeTab === "detailed") {
+    currentReports = dashboardData?.detailedReports || [];
+  } else {
+    currentReports = dashboardData?.[`${activeTab}Reports`] || [];
+  }
 
   let statsDateRange = currentStats?.dateRange;
   if (activeTab === "weekly") {
@@ -528,64 +584,131 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="grid gap-2 sm:gap-4">
-              {currentReports.map((report: any, index: number) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 rounded-lg p-2 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between">
-                  <div className="flex-1 mb-2 sm:mb-0">
-                    <h5 className="font-semibold text-gray-900 text-sm sm:text-base">
-                      {activeTab === "detailed"
-                        ? `${report.workerName} - ${report.date} - ${report.municipality}`
-                        : report.title}
-                    </h5>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {activeTab === "detailed"
-                        ? `الحي: ${report.district} | نوع المكافحة: ${report.controlType}`
-                        : report.dateRange}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      إجمالي المواقع: {report.totalSites}
-                    </p>
-                    {activeTab !== "detailed" && report.districts && (
-                      <p className="text-xs text-gray-500">
-                        البلديات: {report.districts.join(", ")}
-                      </p>
-                    )}
-                    {activeTab !== "detailed" && report.workerName && (
-                      <p className="text-xs text-gray-500">
-                        الأخصائي: {report.workerName}
-                      </p>
-                    )}
-                    {activeTab !== "detailed" && report.controlType && (
-                      <p className="text-xs text-gray-500">
-                        نوع المكافحة: {report.controlType}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <button
-                      onClick={() =>
-                        activeTab === "detailed"
-                          ? handleViewDetailedReport(report)
-                          : handleViewReport(report)
-                      }
-                      className="bg-blue-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
-                      <Eye className="w-4 h-4" />
-                      <span>عرض</span>
-                    </button>
-                    <button
-                      onClick={() =>
-                        activeTab === "detailed"
-                          ? handleDownloadDetailedReport(report)
-                          : handleDownloadReport(report, activeTab)
-                      }
-                      className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
-                      <Download className="w-4 h-4" />
-                      <span>تحميل</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {activeTab === "detailed"
+                ? currentReports
+                    .sort(
+                      (a, b) =>
+                        new Date(b.date).getTime() - new Date(a.date).getTime()
+                    )
+                    .map((report: any, index: number) => (
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-2 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between">
+                        <div className="flex-1 mb-2 sm:mb-0">
+                          <h5 className="font-semibold text-gray-900 text-sm sm:text-base">
+                            {`${report.workerName} - ${report.date} - ${report.municipality}`}
+                          </h5>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            {`الحي: ${report.district} | نوع المكافحة: ${report.controlType}`}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600">
+                            إجمالي المواقع:{" "}
+                            {(
+                              Object.values(report.siteCounts || {}) as number[]
+                            ).reduce((a: number, b: number) => a + b, 0)}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2 rtl:space-x-reverse">
+                          <button
+                            onClick={() => handleViewDetailedReport(report)}
+                            className="bg-blue-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
+                            <Eye className="w-4 h-4" />
+                            <span>عرض</span>
+                          </button>
+                          <button
+                            onClick={() => handleDownloadDetailedReport(report)}
+                            className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
+                            <Download className="w-4 h-4" />
+                            <span>تحميل</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                : currentReports.map((group: any, index: number) => {
+                    // Aggregate stats for the group
+                    const totalSites = group.reports
+                      ? (
+                          group.reports
+                            .map(
+                              (r: any) =>
+                                Object.values(r.siteCounts || {}) as number[]
+                            )
+                            .flat() as number[]
+                        ).reduce((a: number, b: number) => a + b, 0)
+                      : 0;
+                    const allDistricts = group.reports
+                      ? Array.from(
+                          new Set(group.reports.map((r: any) => r.district))
+                        )
+                      : [];
+                    const allMunicipalities = group.reports
+                      ? Array.from(
+                          new Set(group.reports.map((r: any) => r.municipality))
+                        )
+                      : [];
+                    // Title and date range
+                    let title = "";
+                    let dateRange = "";
+                    if (activeTab === "daily") {
+                      title = `تقرير يومي - ${group.date}`;
+                      dateRange = group.date;
+                    } else if (activeTab === "weekly") {
+                      const firstReportDate = group.reports?.[0]?.date || "";
+                      const weekRange = firstReportDate
+                        ? getWeekRange(firstReportDate)
+                        : { start: "", end: "" };
+                      title = `تقرير أسبوعي - الأسبوع من ${weekRange.start} إلى ${weekRange.end}`;
+                      dateRange = `${weekRange.start} إلى ${weekRange.end}`;
+                    } else if (activeTab === "monthly") {
+                      const [year, month] = group.month.split("-");
+                      const computedTitle = `تقرير شهري - ${year}/${parseInt(
+                        month,
+                        10
+                      )}`;
+                      title = computedTitle;
+                      const firstDay = `${year}-${month}-01`;
+                      const lastDay = new Date(Number(year), Number(month), 1)
+                        .toISOString()
+                        .split("T")[0];
+                      dateRange = `${firstDay} إلى ${lastDay}`;
+                    }
+                    return (
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-lg p-2 sm:p-4 mb-2 flex flex-col sm:flex-row sm:items-center justify-between">
+                        <div className="flex-1 mb-2 sm:mb-0">
+                          <h5 className="font-semibold text-gray-900 text-sm sm:text-base mb-1">
+                            {title}
+                          </h5>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                            {dateRange}
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                            إجمالي المواقع: {totalSites}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            البلديات: {allMunicipalities.join(", ")}
+                          </p>
+                        </div>
+                        <div className="flex space-x-2 rtl:space-x-reverse">
+                          <button
+                            onClick={() => handleViewReport(group)}
+                            className="bg-blue-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
+                            <Eye className="w-4 h-4" />
+                            <span>عرض</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDownloadReport(group, activeTab)
+                            }
+                            className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
+                            <Download className="w-4 h-4" />
+                            <span>تحميل</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
             </div>
           )}
         </div>
@@ -631,13 +754,85 @@ function ReportModal({
     };
   }, []);
 
+  // If report has .reports, aggregate stats
+  let modalStats = report;
+  if (report.reports && Array.isArray(report.reports)) {
+    // Aggregate totalSites
+    const totalSites = (
+      report.reports
+        .map((r: any) => Object.values(r.siteCounts || {}) as number[])
+        .flat() as number[]
+    ).reduce((a: number, b: number) => a + b, 0);
+    // Aggregate siteType counts by municipality
+    const siteTypeTotals: Record<string, Record<string, number>> = {};
+    const districtCounts: Record<string, number> = {};
+    const siteTypeCounts: Record<string, number> = {};
+    report.reports.forEach((r: any) => {
+      Object.entries(r.siteCounts || {}).forEach(([type, count]) => {
+        siteTypeTotals[type] = siteTypeTotals[type] || {};
+        siteTypeTotals[type][r.municipality] =
+          (siteTypeTotals[type][r.municipality] || 0) + (count as number);
+        siteTypeCounts[type] = (siteTypeCounts[type] || 0) + (count as number);
+      });
+      districtCounts[r.district] = (districtCounts[r.district] || 0) + 1;
+    });
+    // Highest site type
+    const highestSiteType = Object.entries(siteTypeCounts).sort(
+      (a, b) => b[1] - a[1]
+    )[0] || ["", 0];
+    // Most active district
+    const mostActiveDistrict =
+      Object.entries(districtCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+    // Grand total
+    const grandTotal = totalSites;
+    // Compose modalStats
+    modalStats = {
+      ...report,
+      totalSites,
+      highestSite: { type: highestSiteType[0], count: highestSiteType[1] },
+      mostActiveDistrict,
+      data: {
+        siteTypeTotals,
+        grandTotal,
+      },
+    };
+  }
+
+  let dateRange = "";
+  if (report.week) {
+    // Weekly group
+    const firstReportDate = report.reports?.[0]?.date || "";
+    const weekRange = firstReportDate
+      ? getWeekRange(firstReportDate)
+      : { start: "", end: "" };
+    dateRange = `${weekRange.start} إلى ${weekRange.end}`;
+  } else if (report.month) {
+    // Monthly group
+    const [year, month] = report.month.split("-");
+    const computedTitle = `تقرير شهري - ${year}/${parseInt(month, 10)}`;
+    const firstDay = `${year}-${month}-01`;
+    const lastDay = new Date(Number(year), Number(month), 0)
+      .toISOString()
+      .split("T")[0];
+    dateRange = `${firstDay} إلى ${lastDay}`;
+    modalStats = {
+      ...modalStats,
+      title: computedTitle,
+    };
+  } else if (report.date) {
+    // Daily group
+    dateRange = report.date;
+  }
+
   const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div
         className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-auto p-0 flex flex-col shadow-2xl"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
-          <h3 className="text-xl font-bold text-gray-900">{report.title}</h3>
+          <h3 className="text-xl font-bold text-gray-900">
+            {modalStats.title}
+          </h3>
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
             <button
               onClick={onDownload}
@@ -655,54 +850,55 @@ function ReportModal({
 
         <div className="p-6 flex-1 min-h-0 overflow-auto">
           <div className="mb-4">
-            <p className="text-sm text-gray-600">الفترة: {report.dateRange}</p>
+            <p className="text-sm text-gray-600">الفترة: {dateRange}</p>
             <p className="text-sm text-gray-600">
-              إجمالي المواقع: {report.totalSites}
+              إجمالي المواقع: {modalStats.totalSites}
             </p>
             <p className="text-sm text-gray-600">
               الموقع الأعلى:{" "}
-              {report.highestSite?.type
-                ? `${report.highestSite.type} (${report.highestSite.count})`
+              {modalStats.highestSite?.type
+                ? `${modalStats.highestSite.type} (${modalStats.highestSite.count})`
                 : "غير متوفر"}
             </p>
             <p className="text-sm text-gray-600">
-              البلدية الأكثر نشاطاً: {report.mostActiveDistrict || "غير متوفر"}
+              البلدية الأكثر نشاطاً:{" "}
+              {modalStats.mostActiveDistrict || "غير متوفر"}
             </p>
-            {report.workerName && (
+            {modalStats.workerName && (
               <p className="text-sm text-gray-600">
-                الأخصائي: {report.workerName}
+                الأخصائي: {modalStats.workerName}
               </p>
             )}
-            {report.controlType && (
+            {modalStats.controlType && (
               <p className="text-sm text-gray-600">
-                نوع المكافحة: {report.controlType}
+                نوع المكافحة: {modalStats.controlType}
               </p>
             )}
-            {report.bgTraps && (
+            {modalStats.bgTraps && (
               <p className="text-sm text-gray-600">
                 مصائد BG brow:{" "}
-                {report.bgTraps.isPositive
-                  ? `ايجابي (${report.bgTraps.count})`
+                {modalStats.bgTraps.isPositive
+                  ? `ايجابي (${modalStats.bgTraps.count})`
                   : "سلبي"}
               </p>
             )}
-            {report.smartTraps && (
+            {modalStats.smartTraps && (
               <p className="text-sm text-gray-600">
                 مصائد ذكية:{" "}
-                {report.smartTraps.isPositive
-                  ? `ايجابي (${report.smartTraps.count})`
+                {modalStats.smartTraps.isPositive
+                  ? `ايجابي (${modalStats.smartTraps.count})`
                   : "سلبي"}
               </p>
             )}
-            {report.comment && (
+            {modalStats.comment && (
               <p className="text-sm text-gray-600">
-                الملاحظات: {report.comment}
+                الملاحظات: {modalStats.comment}
               </p>
             )}
-            {report.coordinates && (
+            {modalStats.coordinates && (
               <p className="text-sm text-gray-600">
-                الإحداثيات: {report.coordinates.latitude.toFixed(6)},{" "}
-                {report.coordinates.longitude.toFixed(6)}
+                الإحداثيات: {modalStats.coordinates.latitude.toFixed(6)},{" "}
+                {modalStats.coordinates.longitude.toFixed(6)}
               </p>
             )}
           </div>
@@ -728,7 +924,8 @@ function ReportModal({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {siteTypes.map((siteType, index) => {
-                  const rowData = report.data?.siteTypeTotals?.[siteType] || {};
+                  const rowData =
+                    modalStats.data?.siteTypeTotals?.[siteType] || {};
                   const rowTotal = municipalities.reduce(
                     (sum, municipality) => sum + (rowData[municipality] || 0),
                     0
@@ -764,7 +961,7 @@ function ReportModal({
                       (sum, siteType) => {
                         return (
                           sum +
-                          (report.data?.siteTypeTotals?.[siteType]?.[
+                          (modalStats.data?.siteTypeTotals?.[siteType]?.[
                             municipality
                           ] || 0)
                         );
@@ -780,7 +977,7 @@ function ReportModal({
                     );
                   })}
                   <td className="px-4 py-3 text-center text-sm font-bold text-blue-900">
-                    {report.data?.grandTotal || 0}
+                    {modalStats.data?.grandTotal || 0}
                   </td>
                 </tr>
               </tbody>
