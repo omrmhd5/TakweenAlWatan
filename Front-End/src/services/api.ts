@@ -1,5 +1,5 @@
 // Backend API base URL
-const API_URL = "https://takweenalwatan.fly.dev";
+const API_URL = "https://takweenalwatan.fly.dev/";
 
 export interface PestControlData {
   date: string;

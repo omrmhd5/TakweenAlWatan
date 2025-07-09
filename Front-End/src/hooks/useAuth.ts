@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const serverURL = "https://takweenalwatan.fly.dev";
+  const serverURL = "https://takweenalwatan.fly.dev/";
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
