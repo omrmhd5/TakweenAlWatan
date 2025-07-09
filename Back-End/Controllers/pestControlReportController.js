@@ -617,87 +617,547 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       return;
     }
 
+    // Enhanced detailed report section (replace the existing detailed report code)
+
+    // Enhanced detailed report section (replace the existing detailed report code)
+
     // Enhanced detailed report
-    worksheet.mergeCells("A1:G3");
-    const detailedHeaderCell = worksheet.getCell("A1");
-    detailedHeaderCell.value = "تقرير مفصل - مكافحة الآفات";
-    detailedHeaderCell.font = {
+    // Only export the selected report (by id if provided, else by startDate)
+    let selectedReport = reports[0];
+    if (req.query.id) {
+      selectedReport =
+        reports.find((r) => r._id.toString() === req.query.id) || reports[0];
+    } else if (req.query.startDate) {
+      selectedReport =
+        reports.find((r) => r.date === req.query.startDate) || reports[0];
+    }
+
+    // Calculate totalSites if missing
+    let totalSites = selectedReport.totalSites;
+    if (typeof totalSites !== "number") {
+      totalSites = Object.values(selectedReport.siteCounts || {}).reduce(
+        (sum, count) => sum + count,
+        0
+      );
+    }
+
+    // Add company header and logo area (matching other reports)
+    worksheet.mergeCells("A1:J3");
+    const headerCell = worksheet.getCell("A1");
+    headerCell.value = "تقرير مفصل - مكافحة الآفات - شركة تكوين الوطن";
+    headerCell.font = {
       bold: true,
-      size: 18,
+      size: 20,
       color: { argb: "FFFFFFFF" },
+      name: "Arial",
     };
-    detailedHeaderCell.alignment = { horizontal: "center", vertical: "middle" };
-    detailedHeaderCell.fill = {
+    headerCell.alignment = { horizontal: "center", vertical: "middle" };
+    headerCell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF2E5090" },
+      fgColor: { argb: "FF2E5090" }, // Dark blue
+    };
+    headerCell.border = {
+      top: { style: "thick", color: { argb: "FF2E5090" } },
+      left: { style: "thick", color: { argb: "FF2E5090" } },
+      bottom: { style: "thick", color: { argb: "FF2E5090" } },
+      right: { style: "thick", color: { argb: "FF2E5090" } },
     };
 
-    // Enhanced column headers
-    worksheet.getRow(5).values = [
-      "اسم الأخصائي",
-      "التاريخ",
-      "البلدية",
-      "الحي",
-      "نوع المكافحة",
-      "إجمالي المواقع",
-      "الإحداثيات",
+    // Add generation date and time
+    worksheet.mergeCells("A4:J4");
+    const dateCell = worksheet.getCell("A4");
+    dateCell.value = `تاريخ الإنشاء: ${new Date().toLocaleString("ar-SA")}`;
+    dateCell.font = { size: 11, italic: true, color: { argb: "FF666666" } };
+    dateCell.alignment = { horizontal: "center" };
+    dateCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF8F9FA" },
+    };
+
+    // Report title with enhanced styling
+    const reportDate = new Date(selectedReport.date).toLocaleDateString(
+      "ar-SA"
+    );
+    worksheet.mergeCells("A6:J6");
+    const titleCell = worksheet.getCell("A6");
+    titleCell.value = `تقرير تفصيلي - ${reportDate}`;
+    titleCell.font = {
+      bold: true,
+      size: 18,
+      color: { argb: "FF2E5090" },
+      name: "Arial",
+    };
+    titleCell.alignment = { horizontal: "center", vertical: "middle" };
+    titleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE8F1FF" },
+    };
+    titleCell.border = {
+      top: { style: "medium", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "medium", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
+
+    // Enhanced metadata section with card-style layout
+    const metaStartRow = 8;
+    const metaData = [
+      { label: "التاريخ", value: selectedReport.date, icon: "📅" },
+      { label: "اسم الأخصائي", value: selectedReport.workerName, icon: "👨‍💼" },
+      { label: "البلدية", value: selectedReport.municipality, icon: "🏢" },
+      { label: "الحي", value: selectedReport.district, icon: "🏘️" },
+      { label: "نوع المكافحة", value: selectedReport.controlType, icon: "🔧" },
+      { label: "إجمالي المواقع", value: totalSites, icon: "📊" },
+      {
+        label: "الإحداثيات",
+        value: selectedReport.coordinates
+          ? `${selectedReport.coordinates.latitude}, ${selectedReport.coordinates.longitude}`
+          : "غير محدد",
+        icon: "📍",
+      },
     ];
 
-    const headerRow = worksheet.getRow(5);
-    headerRow.font = {
+    // Create metadata cards (2 per row)
+    metaData.forEach((meta, index) => {
+      const row = metaStartRow + Math.floor(index / 2);
+      const col = (index % 2) * 5 + 1;
+
+      // Merge cells for each metadata card
+      worksheet.mergeCells(row, col, row, col + 4);
+      const metaCell = worksheet.getCell(row, col);
+      metaCell.value = `${meta.icon} ${meta.label}: ${meta.value}`;
+      metaCell.font = {
+        bold: true,
+        size: 12,
+        color: { argb: "FF2E5090" },
+      };
+      metaCell.alignment = { horizontal: "center", vertical: "middle" };
+      metaCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF0F8FF" },
+      };
+      metaCell.border = {
+        top: { style: "thin", color: { argb: "FFCCCCCC" } },
+        left: { style: "thin", color: { argb: "FFCCCCCC" } },
+        bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+        right: { style: "thin", color: { argb: "FFCCCCCC" } },
+      };
+    });
+
+    // Enhanced traps section
+    const trapsStartRow = metaStartRow + 4;
+
+    // Traps section title
+    worksheet.mergeCells(`A${trapsStartRow}:J${trapsStartRow}`);
+    const trapsTitleCell = worksheet.getCell(trapsStartRow, 1);
+    trapsTitleCell.value = "🪤 معلومات المصائد";
+    trapsTitleCell.font = {
+      bold: true,
+      size: 16,
+      color: { argb: "FF2E5090" },
+      name: "Arial",
+    };
+    trapsTitleCell.alignment = { horizontal: "center", vertical: "middle" };
+    trapsTitleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE8F1FF" },
+    };
+    trapsTitleCell.border = {
+      top: { style: "medium", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "medium", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
+
+    // BG Traps info
+    const bgTrapsRow = trapsStartRow + 2;
+    worksheet.mergeCells(`A${bgTrapsRow}:C${bgTrapsRow}`);
+    const bgTrapsCell = worksheet.getCell(bgTrapsRow, 1);
+    bgTrapsCell.value = "🎯 مصائد BG brow";
+    bgTrapsCell.font = { bold: true, size: 12, color: { argb: "FF2E5090" } };
+    bgTrapsCell.alignment = { horizontal: "center", vertical: "middle" };
+    bgTrapsCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF0F8FF" },
+    };
+    bgTrapsCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    worksheet.mergeCells(`D${bgTrapsRow}:E${bgTrapsRow}`);
+    const bgCountCell = worksheet.getCell(bgTrapsRow, 4);
+    bgCountCell.value = `العدد: ${selectedReport.bgTraps?.count || 0}`;
+    bgCountCell.font = { bold: true, size: 11, color: { argb: "FF2E5090" } };
+    bgCountCell.alignment = { horizontal: "center", vertical: "middle" };
+    bgCountCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF0F8FF" },
+    };
+    bgCountCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    worksheet.mergeCells(`F${bgTrapsRow}:J${bgTrapsRow}`);
+    const bgStatusCell = worksheet.getCell(bgTrapsRow, 6);
+    const bgStatus = selectedReport.bgTraps?.isPositive
+      ? "إيجابي ✅"
+      : "سلبي ❌";
+    bgStatusCell.value = `الحالة: ${bgStatus}`;
+    bgStatusCell.font = {
+      bold: true,
+      size: 12,
+      color: {
+        argb: selectedReport.bgTraps?.isPositive ? "FF008000" : "FFFF0000",
+      },
+    };
+    bgStatusCell.alignment = { horizontal: "center", vertical: "middle" };
+    bgStatusCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: {
+        argb: selectedReport.bgTraps?.isPositive ? "FFE8F5E8" : "FFFFEAEA",
+      },
+    };
+    bgStatusCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    // Smart Traps info
+    const smartTrapsRow = bgTrapsRow + 1;
+    worksheet.mergeCells(`A${smartTrapsRow}:C${smartTrapsRow}`);
+    const smartTrapsCell = worksheet.getCell(smartTrapsRow, 1);
+    smartTrapsCell.value = "🤖 مصائد ذكية";
+    smartTrapsCell.font = { bold: true, size: 12, color: { argb: "FF2E5090" } };
+    smartTrapsCell.alignment = { horizontal: "center", vertical: "middle" };
+    smartTrapsCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF0F8FF" },
+    };
+    smartTrapsCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    worksheet.mergeCells(`D${smartTrapsRow}:E${smartTrapsRow}`);
+    const smartCountCell = worksheet.getCell(smartTrapsRow, 4);
+    smartCountCell.value = `العدد: ${selectedReport.smartTraps?.count || 0}`;
+    smartCountCell.font = { bold: true, size: 11, color: { argb: "FF2E5090" } };
+    smartCountCell.alignment = { horizontal: "center", vertical: "middle" };
+    smartCountCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF0F8FF" },
+    };
+    smartCountCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    worksheet.mergeCells(`F${smartTrapsRow}:J${smartTrapsRow}`);
+    const smartStatusCell = worksheet.getCell(smartTrapsRow, 6);
+    const smartStatus = selectedReport.smartTraps?.isPositive
+      ? "إيجابي ✅"
+      : "سلبي ❌";
+    smartStatusCell.value = `الحالة: ${smartStatus}`;
+    smartStatusCell.font = {
+      bold: true,
+      size: 12,
+      color: {
+        argb: selectedReport.smartTraps?.isPositive ? "FF008000" : "FFFF0000",
+      },
+    };
+    smartStatusCell.alignment = { horizontal: "center", vertical: "middle" };
+    smartStatusCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: {
+        argb: selectedReport.smartTraps?.isPositive ? "FFE8F5E8" : "FFFFEAEA",
+      },
+    };
+    smartStatusCell.border = {
+      top: { style: "thin", color: { argb: "FFCCCCCC" } },
+      left: { style: "thin", color: { argb: "FFCCCCCC" } },
+      bottom: { style: "thin", color: { argb: "FFCCCCCC" } },
+      right: { style: "thin", color: { argb: "FFCCCCCC" } },
+    };
+
+    // Enhanced site counts table
+    const tableStartRow = smartTrapsRow + 3;
+
+    // Table title
+    worksheet.mergeCells(`A${tableStartRow}:J${tableStartRow}`);
+    const tableTitleCell = worksheet.getCell(tableStartRow, 1);
+    tableTitleCell.value = "📋 تفاصيل المواقع المستهدفة";
+    tableTitleCell.font = {
+      bold: true,
+      size: 16,
+      color: { argb: "FF2E5090" },
+      name: "Arial",
+    };
+    tableTitleCell.alignment = { horizontal: "center", vertical: "middle" };
+    tableTitleCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFE8F1FF" },
+    };
+    tableTitleCell.border = {
+      top: { style: "medium", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "medium", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
+
+    // Table headers
+    const headerRow = tableStartRow + 2;
+    const headers = ["نوع الموقع", "العدد", "التعليق"];
+
+    headers.forEach((header, index) => {
+      let colSpan, startCol;
+      if (index === 0) {
+        colSpan = 4;
+        startCol = 1;
+      } else if (index === 1) {
+        colSpan = 2;
+        startCol = 5;
+      } else {
+        // index === 2 (التعليق)
+        colSpan = 4;
+        startCol = 7;
+      }
+
+      worksheet.mergeCells(
+        headerRow,
+        startCol,
+        headerRow,
+        startCol + colSpan - 1
+      );
+      const headerCell = worksheet.getCell(headerRow, startCol);
+      headerCell.value = header;
+      headerCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF4A90E2" },
+      };
+      headerCell.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" },
+        size: 12,
+        name: "Arial",
+      };
+      headerCell.alignment = { horizontal: "center", vertical: "middle" };
+      headerCell.border = {
+        top: { style: "medium", color: { argb: "FF2E5090" } },
+        left: { style: "thin", color: { argb: "FF2E5090" } },
+        bottom: { style: "medium", color: { argb: "FF2E5090" } },
+        right: { style: "thin", color: { argb: "FF2E5090" } },
+      };
+    });
+
+    // Site counts data with enhanced styling
+    let dataRow = headerRow + 1;
+    let isAlt = false;
+
+    for (const siteType of allSiteTypes) {
+      const count = selectedReport.siteCounts?.[siteType] || 0;
+      const comment = selectedReport.siteComments?.[siteType] || "";
+
+      // Site type column
+      worksheet.mergeCells(dataRow, 1, dataRow, 4);
+      const siteTypeCell = worksheet.getCell(dataRow, 1);
+      siteTypeCell.value = siteType;
+      siteTypeCell.font = {
+        bold: true,
+        color: { argb: "FFFFFFFF" },
+        size: 11,
+      };
+      siteTypeCell.alignment = { horizontal: "center", vertical: "middle" };
+      siteTypeCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FF6AB7FF" },
+      };
+      siteTypeCell.border = {
+        top: { style: "thin", color: { argb: "FFDDDDDD" } },
+        left: { style: "thin", color: { argb: "FFDDDDDD" } },
+        bottom: { style: "thin", color: { argb: "FFDDDDDD" } },
+        right: { style: "thin", color: { argb: "FFDDDDDD" } },
+      };
+
+      // Count column
+      worksheet.mergeCells(dataRow, 5, dataRow, 6);
+      const countCell = worksheet.getCell(dataRow, 5);
+      countCell.value = count;
+      countCell.font = {
+        bold: count > 0,
+        color: { argb: count > 0 ? "FF2E5090" : "FF333333" },
+        size: 11,
+      };
+      countCell.alignment = { horizontal: "center", vertical: "middle" };
+      countCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: isAlt ? "FFF8F9FA" : "FFFFFFFF" },
+      };
+      countCell.border = {
+        top: { style: "thin", color: { argb: "FFDDDDDD" } },
+        left: { style: "thin", color: { argb: "FFDDDDDD" } },
+        bottom: { style: "thin", color: { argb: "FFDDDDDD" } },
+        right: { style: "thin", color: { argb: "FFDDDDDD" } },
+      };
+
+      // Comment column
+      worksheet.mergeCells(dataRow, 7, dataRow, 10);
+      const commentCell = worksheet.getCell(dataRow, 7);
+      commentCell.value = comment;
+      commentCell.font = {
+        color: { argb: "FF333333" },
+        size: 10,
+        italic: true,
+      };
+      commentCell.alignment = {
+        horizontal: "right",
+        vertical: "middle",
+        wrapText: true,
+      };
+      commentCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: isAlt ? "FFF8F9FA" : "FFFFFFFF" },
+      };
+      commentCell.border = {
+        top: { style: "thin", color: { argb: "FFDDDDDD" } },
+        left: { style: "thin", color: { argb: "FFDDDDDD" } },
+        bottom: { style: "thin", color: { argb: "FFDDDDDD" } },
+        right: { style: "thin", color: { argb: "FFDDDDDD" } },
+      };
+
+      isAlt = !isAlt;
+      dataRow++;
+    }
+
+    // Enhanced total row
+    worksheet.mergeCells(dataRow, 1, dataRow, 4);
+    const totalLabelCell = worksheet.getCell(dataRow, 1);
+    totalLabelCell.value = "الإجمالي";
+    totalLabelCell.font = {
       bold: true,
       color: { argb: "FFFFFFFF" },
       size: 12,
     };
-    headerRow.fill = {
+    totalLabelCell.alignment = { horizontal: "center", vertical: "middle" };
+    totalLabelCell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FF4A90E2" },
+      fgColor: { argb: "FF2E5090" },
     };
-    headerRow.alignment = { horizontal: "center", vertical: "middle" };
-    headerRow.height = 25;
+    totalLabelCell.border = {
+      top: { style: "thick", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "thick", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
 
-    // Add data with alternating colors
-    let rowIndex = 6;
-    reports.forEach((r, index) => {
-      const row = worksheet.getRow(rowIndex);
-      row.values = [
-        r.workerName,
-        r.date,
-        r.municipality,
-        r.district,
-        r.controlType,
-        r.totalSites,
-        r.coordinates
-          ? `${r.coordinates.latitude}, ${r.coordinates.longitude}`
-          : "",
-      ];
+    worksheet.mergeCells(dataRow, 5, dataRow, 6);
+    const totalValueCell = worksheet.getCell(dataRow, 5);
+    totalValueCell.value = totalSites;
+    totalValueCell.font = {
+      bold: true,
+      color: { argb: "FFFFFFFF" },
+      size: 12,
+    };
+    totalValueCell.alignment = { horizontal: "center", vertical: "middle" };
+    totalValueCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF2E5090" },
+    };
+    totalValueCell.border = {
+      top: { style: "thick", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "thick", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
 
-      row.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: index % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA" },
-      };
-      row.alignment = { horizontal: "center", vertical: "middle" };
-      rowIndex++;
-    });
+    // Total comment cell (empty but styled)
+    worksheet.mergeCells(dataRow, 7, dataRow, 10);
+    const totalCommentCell = worksheet.getCell(dataRow, 7);
+    totalCommentCell.value = "";
+    totalCommentCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FF2E5090" },
+    };
+    totalCommentCell.border = {
+      top: { style: "thick", color: { argb: "FF2E5090" } },
+      left: { style: "medium", color: { argb: "FF2E5090" } },
+      bottom: { style: "thick", color: { argb: "FF2E5090" } },
+      right: { style: "medium", color: { argb: "FF2E5090" } },
+    };
 
-    // Set column widths for detailed report
+    // Add footer (matching other reports)
+    const footerRow = dataRow + 3;
+    worksheet.mergeCells(`A${footerRow}:J${footerRow}`);
+    const footerCell = worksheet.getCell(footerRow, 1);
+    footerCell.value = "© شركة تكوين الوطن - قسم مكافحة الآفات";
+    footerCell.font = {
+      italic: true,
+      size: 10,
+      color: { argb: "FF666666" },
+    };
+    footerCell.alignment = { horizontal: "center" };
+    footerCell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFF8F9FA" },
+    };
+
+    // Set column widths (matching other reports)
     worksheet.columns = [
-      { width: 20 }, // Worker name
-      { width: 15 }, // Date
-      { width: 15 }, // Municipality
-      { width: 15 }, // District
-      { width: 15 }, // Control type
-      { width: 15 }, // Total sites
-      { width: 25 }, // Coordinates
+      { width: 15 }, // A
+      { width: 15 }, // B
+      { width: 15 }, // C
+      { width: 15 }, // D
+      { width: 15 }, // E
+      { width: 15 }, // F
+      { width: 15 }, // G
+      { width: 15 }, // H
+      { width: 15 }, // I
+      { width: 15 }, // J
     ];
 
-    const fileName = `تقرير_مفصل_${
-      new Date().toISOString().split("T")[0]
-    }.xlsx`;
+    // Set row heights
+    worksheet.getRow(1).height = 45; // Header
+    worksheet.getRow(6).height = 30; // Title
+    worksheet.getRow(tableStartRow).height = 30; // Table title
+
+    // Generate filename
+    const reportDateStr = new Date(selectedReport.date)
+      .toISOString()
+      .split("T")[0];
+    const fileName = `تقرير_مفصل_${reportDateStr}.xlsx`;
     const encodedFileName = encodeURIComponent(fileName);
+
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -706,6 +1166,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       "Content-Disposition",
       `attachment; filename*=UTF-8''${encodedFileName}`
     );
+
+    console.log("siteComments:", selectedReport.siteComments);
+
     await workbook.xlsx.write(res);
     res.end();
   } catch (error) {

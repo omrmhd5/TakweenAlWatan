@@ -209,7 +209,7 @@ export default function AdminDashboard() {
 
   const handleDownloadDetailedReport = async (report: any) => {
     try {
-      await exportReport(report, "detailed", filters);
+      await exportReport(report, "detailed", { ...filters, id: report._id });
       showToast("تم تصدير التقرير المفصل بنجاح", "success");
     } catch (error) {
       showToast("حدث خطأ أثناء تصدير التقرير", "error");

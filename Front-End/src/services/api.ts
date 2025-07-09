@@ -153,6 +153,7 @@ export async function exportReport(
   if (filters.districts && filters.districts.length > 0) {
     filters.districts.forEach((d: string) => params.append("districts", d));
   }
+  if (filters.id) params.append("id", filters.id);
   const url = `${API_URL}/export?${params.toString()}`;
   const res = await fetch(url, { method: "GET" });
   if (!res.ok) throw new Error("Failed to export report");
