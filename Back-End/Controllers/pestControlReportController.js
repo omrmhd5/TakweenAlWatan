@@ -1,10 +1,38 @@
 const PestControlReport = require("../Models/PestControlReport");
 const ExcelJS = require("exceljs");
 
+// Site type mapping to handle data migration from old names to new names
+const siteTypeMapping = {
+  // Old names -> New names
+  "المواقع الايجابية": "المواقع الإيجابية",
+  "مناهل مكشوفة": "مناهل مكشوفه",
+  "الاحواش المهجورة": "احواش مهجورة",
+  "الحدائق العامة": "حدائق عامة",
+  "الاحواض الاسمنتية": "حوض اسمنتي",
+  "إطارات سيارات": "الإطارات",
+  // Keep the extra types that weren't in the image
+  "الحالات المباشرة": "الحالات المباشرة",
+  "بلاغات 940": "بلاغات 940",
+};
+
+// Function to transform site counts from old format to new format
+const transformSiteCounts = (siteCounts) => {
+  const transformed = {};
+
+  Object.entries(siteCounts || {}).forEach(([oldKey, value]) => {
+    const newKey = siteTypeMapping[oldKey] || oldKey;
+    transformed[newKey] = value;
+  });
+
+  return transformed;
+};
+
 // Submit a new pest control report
 exports.submitPestControlReport = async (req, res) => {
   try {
     const data = req.body;
+    // Transform site counts to new format before saving
+    data.siteCounts = transformSiteCounts(data.siteCounts);
     // Calculate totalSites
     const totalSites = Object.values(data.siteCounts).reduce(
       (sum, count) => sum + count,
@@ -31,6 +59,12 @@ exports.getPestControlReports = async (req, res) => {
       };
     const reports = await PestControlReport.find(filter);
 
+    // Transform site counts for all reports to handle old data format
+    const transformedReports = reports.map((report) => ({
+      ...report.toObject(),
+      siteCounts: transformSiteCounts(report.siteCounts),
+    }));
+
     // Helper functions
     const groupBy = (arr, keyFn) => {
       return arr.reduce((acc, item) => {
@@ -55,9 +89,9 @@ exports.getPestControlReports = async (req, res) => {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     };
     // Group reports
-    const dailyGroups = groupBy(reports, getDate);
-    const weeklyGroups = groupBy(reports, getWeek);
-    const monthlyGroups = groupBy(reports, getMonth);
+    const dailyGroups = groupBy(transformedReports, getDate);
+    const weeklyGroups = groupBy(transformedReports, getWeek);
+    const monthlyGroups = groupBy(transformedReports, getMonth);
 
     // Helper to calculate stats for a group
     const calcStats = (group, dateRange) => {
@@ -132,7 +166,7 @@ exports.getPestControlReports = async (req, res) => {
       dailyReports,
       weeklyReports,
       monthlyReports,
-      detailedReports: reports,
+      detailedReports: transformedReports,
       statistics,
     });
   } catch (error) {
@@ -153,26 +187,36 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       };
     const reports = await PestControlReport.find(filter);
 
+    // Transform site counts for all reports to handle old data format
+    const transformedReports = reports.map((report) => ({
+      ...report.toObject(),
+      siteCounts: transformSiteCounts(report.siteCounts),
+    }));
+
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("تقرير مكافحة الآفات");
 
     // Define all possible site types and municipalities
-    const allSiteTypes = [
+    const siteTypes = [
       "المواقع المستكشفة",
       "المواقع السلبية",
-      "المواقع الايجابية",
+      "المواقع الإيجابية",
       "المواقع الدائمة",
       "تجمعات مياه",
       "سقيا الطيور",
-      "مناهل مكشوفة",
-      "الاحواش المهجورة",
+      "مناهل مكشوفه",
+      "احواش مهجورة",
       "مباني تحت الانشاء",
-      "الحدائق العامة",
+      "حدائق عامة",
+      "مرافق عامة",
+      "الاستراحات",
       "المساجد",
-      "مجاري تصريف",
-      "الاحواض الاسمنتية",
-      "إطارات سيارات",
+      "حوض اسمنتي",
+      "الإطارات",
       "مزهريات",
+      "تسريبات مياه",
+      "البرادات",
+      "مجاري تصريف",
       "الحالات المباشرة",
       "بلاغات 940",
     ];
@@ -225,11 +269,11 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       let fileNameDate = "";
 
       if (type === "daily") {
-        groups = groupBy(reports, getDate);
+        groups = groupBy(transformedReports, getDate);
       } else if (type === "weekly") {
-        groups = groupBy(reports, getWeek);
+        groups = groupBy(transformedReports, getWeek);
       } else if (type === "monthly") {
-        groups = groupBy(reports, getMonth);
+        groups = groupBy(transformedReports, getMonth);
       }
 
       // Add company header and logo area
@@ -452,7 +496,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
         // Data rows with enhanced styling
         let isAlt = false;
-        for (const siteType of allSiteTypes) {
+        for (const siteType of siteTypes) {
           const rowData = allMunicipalities.map((municipality) => {
             return groupReports
               .filter((r) => r.municipality === municipality)
@@ -523,7 +567,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
         // Enhanced totals row
         const totals = allMunicipalities.map((municipality) => {
-          return allSiteTypes.reduce((sum, siteType) => {
+          return siteTypes.reduce((sum, siteType) => {
             return (
               sum +
               groupReports
@@ -621,13 +665,15 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     // Enhanced detailed report
     // Only export the selected report (by id if provided, else by startDate)
-    let selectedReport = reports[0];
+    let selectedReport = transformedReports[0];
     if (req.query.id) {
       selectedReport =
-        reports.find((r) => r._id.toString() === req.query.id) || reports[0];
+        transformedReports.find((r) => r._id.toString() === req.query.id) ||
+        transformedReports[0];
     } else if (req.query.startDate) {
       selectedReport =
-        reports.find((r) => r.date === req.query.startDate) || reports[0];
+        transformedReports.find((r) => r.date === req.query.startDate) ||
+        transformedReports[0];
     }
 
     // Calculate totalSites if missing
@@ -973,7 +1019,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     let dataRow = headerRow + 1;
     let isAlt = false;
 
-    for (const siteType of allSiteTypes) {
+    for (const siteType of siteTypes) {
       const count = selectedReport.siteCounts?.[siteType] || 0;
       const comment = selectedReport.siteComments?.[siteType] || "";
 

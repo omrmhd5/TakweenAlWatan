@@ -1,6 +1,32 @@
 // Backend API base URL
 const API_URL = "https://takweenalwatan.fly.dev";
 
+// Site type mapping to handle data migration from old names to new names
+const siteTypeMapping: { [key: string]: string } = {
+  // Old names -> New names
+  "المواقع الايجابية": "المواقع الإيجابية",
+  "مناهل مكشوفة": "مناهل مكشوفه",
+  "الاحواش المهجورة": "احواش مهجورة",
+  "الحدائق العامة": "حدائق عامة",
+  "الاحواض الاسمنتية": "حوض اسمنتي",
+  "إطارات سيارات": "الإطارات",
+  // Keep the extra types that weren't in the image
+  "الحالات المباشرة": "الحالات المباشرة",
+  "بلاغات 940": "بلاغات 940",
+};
+
+// Function to transform site counts from old format to new format
+export const transformSiteCounts = (siteCounts: { [key: string]: number }) => {
+  const transformed: { [key: string]: number } = {};
+
+  Object.entries(siteCounts).forEach(([oldKey, value]) => {
+    const newKey = siteTypeMapping[oldKey] || oldKey;
+    transformed[newKey] = value;
+  });
+
+  return transformed;
+};
+
 export interface PestControlData {
   date: string;
   municipality: string;
@@ -28,19 +54,23 @@ export const exampleReport: PestControlData & {
   siteCounts: {
     "المواقع المستكشفة": 25,
     "المواقع السلبية": 18,
-    "المواقع الايجابية": 7,
+    "المواقع الإيجابية": 7,
     "المواقع الدائمة": 12,
     "تجمعات مياه": 8,
     "سقيا الطيور": 5,
-    "مناهل مكشوفة": 3,
-    "الاحواش المهجورة": 9,
+    "مناهل مكشوفه": 3,
+    "احواش مهجورة": 9,
     "مباني تحت الانشاء": 6,
-    "الحدائق العامة": 4,
+    "حدائق عامة": 4,
+    "مرافق عامة": 2,
+    الاستراحات: 3,
     المساجد: 11,
-    "مجاري تصريف": 7,
-    "الاحواض الاسمنتية": 2,
-    "إطارات سيارات": 15,
+    "حوض اسمنتي": 2,
+    الإطارات: 15,
     مزهريات: 3,
+    "تسريبات مياه": 4,
+    البرادات: 2,
+    "مجاري تصريف": 7,
     "الحالات المباشرة": 8,
     "بلاغات 940": 4,
   },
@@ -138,7 +168,17 @@ export async function getPestControlData(filters: any): Promise<any> {
   }
   const res = await fetch(`${API_URL}/api/reports?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch pest control reports");
-  return await res.json();
+  const data = await res.json();
+
+  // Transform site counts for each report to handle old data format
+  if (data.reports) {
+    data.reports = data.reports.map((report: any) => ({
+      ...report,
+      siteCounts: transformSiteCounts(report.siteCounts || {}),
+    }));
+  }
+
+  return data;
 }
 
 export async function exportReport(
