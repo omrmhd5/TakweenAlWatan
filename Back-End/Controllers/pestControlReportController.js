@@ -943,8 +943,67 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       right: { style: "thin", color: { argb: "FFCCCCCC" } },
     };
 
+    // Comments section (only if there's a comment)
+    let commentsStartRow = smartTrapsRow + 2;
+    if (selectedReport.comment && selectedReport.comment.trim()) {
+      // Comments section title
+      worksheet.mergeCells(`A${commentsStartRow}:J${commentsStartRow}`);
+      const commentsTitleCell = worksheet.getCell(commentsStartRow, 1);
+      commentsTitleCell.value = "💬 الملاحظات والتعليقات";
+      commentsTitleCell.font = {
+        bold: true,
+        size: 16,
+        color: { argb: "FF2E5090" },
+        name: "Arial",
+      };
+      commentsTitleCell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+      };
+      commentsTitleCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFE8F1FF" },
+      };
+      commentsTitleCell.border = {
+        top: { style: "medium", color: { argb: "FF2E5090" } },
+        left: { style: "medium", color: { argb: "FF2E5090" } },
+        bottom: { style: "medium", color: { argb: "FF2E5090" } },
+        right: { style: "medium", color: { argb: "FF2E5090" } },
+      };
+
+      // Comment content
+      const commentContentRow = commentsStartRow + 2;
+      worksheet.mergeCells(`A${commentContentRow}:J${commentContentRow}`);
+      const commentContentCell = worksheet.getCell(commentContentRow, 1);
+      commentContentCell.value = selectedReport.comment;
+      commentContentCell.font = {
+        size: 12,
+        color: { argb: "FF333333" },
+        italic: true,
+      };
+      commentContentCell.alignment = {
+        horizontal: "right",
+        vertical: "middle",
+        wrapText: true,
+      };
+      commentContentCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF8F9FA" },
+      };
+      commentContentCell.border = {
+        top: { style: "thin", color: { argb: "FFDDDDDD" } },
+        left: { style: "thin", color: { argb: "FFDDDDDD" } },
+        bottom: { style: "thin", color: { argb: "FFDDDDDD" } },
+        right: { style: "thin", color: { argb: "FFDDDDDD" } },
+      };
+
+      commentsStartRow = commentContentRow + 2;
+    }
+
     // Enhanced site counts table
-    const tableStartRow = smartTrapsRow + 3;
+    const tableStartRow = commentsStartRow + 1;
 
     // Table title
     worksheet.mergeCells(`A${tableStartRow}:J${tableStartRow}`);
@@ -971,18 +1030,15 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     // Table headers
     const headerRow = tableStartRow + 2;
-    const headers = ["نوع الموقع", "العدد", "التعليق"];
+    const headers = ["نوع الموقع", "العدد"];
 
     headers.forEach((header, index) => {
       let colSpan, startCol;
       if (index === 0) {
-        colSpan = 4;
+        colSpan = 6;
         startCol = 1;
-      } else if (index === 1) {
-        colSpan = 2;
-        startCol = 5;
       } else {
-        // index === 2 (التعليق)
+        // index === 1 (العدد)
         colSpan = 4;
         startCol = 7;
       }
@@ -1021,10 +1077,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     for (const siteType of siteTypes) {
       const count = selectedReport.siteCounts?.[siteType] || 0;
-      const comment = selectedReport.siteComments?.[siteType] || "";
 
       // Site type column
-      worksheet.mergeCells(dataRow, 1, dataRow, 4);
+      worksheet.mergeCells(dataRow, 1, dataRow, 6);
       const siteTypeCell = worksheet.getCell(dataRow, 1);
       siteTypeCell.value = siteType;
       siteTypeCell.font = {
@@ -1046,8 +1101,8 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       };
 
       // Count column
-      worksheet.mergeCells(dataRow, 5, dataRow, 6);
-      const countCell = worksheet.getCell(dataRow, 5);
+      worksheet.mergeCells(dataRow, 7, dataRow, 10);
+      const countCell = worksheet.getCell(dataRow, 7);
       countCell.value = count;
       countCell.font = {
         bold: count > 0,
@@ -1067,38 +1122,12 @@ exports.exportPestControlReportsExcel = async (req, res) => {
         right: { style: "thin", color: { argb: "FFDDDDDD" } },
       };
 
-      // Comment column
-      worksheet.mergeCells(dataRow, 7, dataRow, 10);
-      const commentCell = worksheet.getCell(dataRow, 7);
-      commentCell.value = comment;
-      commentCell.font = {
-        color: { argb: "FF333333" },
-        size: 10,
-        italic: true,
-      };
-      commentCell.alignment = {
-        horizontal: "right",
-        vertical: "middle",
-        wrapText: true,
-      };
-      commentCell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: isAlt ? "FFF8F9FA" : "FFFFFFFF" },
-      };
-      commentCell.border = {
-        top: { style: "thin", color: { argb: "FFDDDDDD" } },
-        left: { style: "thin", color: { argb: "FFDDDDDD" } },
-        bottom: { style: "thin", color: { argb: "FFDDDDDD" } },
-        right: { style: "thin", color: { argb: "FFDDDDDD" } },
-      };
-
       isAlt = !isAlt;
       dataRow++;
     }
 
     // Enhanced total row
-    worksheet.mergeCells(dataRow, 1, dataRow, 4);
+    worksheet.mergeCells(dataRow, 1, dataRow, 6);
     const totalLabelCell = worksheet.getCell(dataRow, 1);
     totalLabelCell.value = "الإجمالي";
     totalLabelCell.font = {
@@ -1119,8 +1148,8 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       right: { style: "medium", color: { argb: "FF2E5090" } },
     };
 
-    worksheet.mergeCells(dataRow, 5, dataRow, 6);
-    const totalValueCell = worksheet.getCell(dataRow, 5);
+    worksheet.mergeCells(dataRow, 7, dataRow, 10);
+    const totalValueCell = worksheet.getCell(dataRow, 7);
     totalValueCell.value = totalSites;
     totalValueCell.font = {
       bold: true,
@@ -1134,22 +1163,6 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       fgColor: { argb: "FF2E5090" },
     };
     totalValueCell.border = {
-      top: { style: "thick", color: { argb: "FF2E5090" } },
-      left: { style: "medium", color: { argb: "FF2E5090" } },
-      bottom: { style: "thick", color: { argb: "FF2E5090" } },
-      right: { style: "medium", color: { argb: "FF2E5090" } },
-    };
-
-    // Total comment cell (empty but styled)
-    worksheet.mergeCells(dataRow, 7, dataRow, 10);
-    const totalCommentCell = worksheet.getCell(dataRow, 7);
-    totalCommentCell.value = "";
-    totalCommentCell.fill = {
-      type: "pattern",
-      pattern: "solid",
-      fgColor: { argb: "FF2E5090" },
-    };
-    totalCommentCell.border = {
       top: { style: "thick", color: { argb: "FF2E5090" } },
       left: { style: "medium", color: { argb: "FF2E5090" } },
       bottom: { style: "thick", color: { argb: "FF2E5090" } },
