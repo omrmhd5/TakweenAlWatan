@@ -1,5 +1,6 @@
 // Backend API base URL
-const API_URL = "https://takweenalwatan.fly.dev";
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+console.log(API_URL);
 
 // Site type mapping to handle data migration from old names to new names
 const siteTypeMapping: { [key: string]: string } = {
