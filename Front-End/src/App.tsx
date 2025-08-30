@@ -175,36 +175,46 @@ function HomePage({
         <div className="text-xl text-gray-600 mb-8 max-w-4xl mx-auto">
           {/* Pyramid Layout for Team Members */}
           <div className="flex flex-col items-center space-y-6">
-            {/* Top Level - Youssef */}
+            {/* Top Level - Project Manager */}
             <div className="text-center">
               <div className="text-lg font-semibold text-blue-700 mb-1">
-                بإدارة مدير العمليات
+                مدير مشروع
               </div>
-              <div className="text-xl font-medium">م/ يوسف عبدالنور الفكي</div>
+              <div className="text-xl font-medium">م/ ماجد محمد ابو شناق</div>
             </div>
 
-            {/* Middle Level - Basheer and Amro side by side */}
+            {/* Middle Level - Youssef and Amro side by side */}
             <div className="flex justify-center space-x-12 rtl:space-x-reverse">
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-700 mb-1">
+                  مدير العمليات
+                </div>
+                <div className="text-xl font-medium">
+                  م/ يوسف عبدالنور الفكي
+                </div>
+              </div>
               <div className="text-center">
                 <div className="text-lg font-semibold text-blue-700 mb-1">
                   مساعد مدير العمليات
                 </div>
                 <div className="text-xl font-medium">م/ عمرو محمد ناصف</div>
               </div>
+            </div>
+
+            {/* Bottom Level - Basheer and Shaker side by side */}
+            <div className="flex justify-center space-x-12 rtl:space-x-reverse">
               <div className="text-center">
                 <div className="text-lg font-semibold text-blue-700 mb-1">
                   مدير المكتب الفني
                 </div>
                 <div className="text-xl font-medium">بشير شبير احمد</div>
               </div>
-            </div>
-
-            {/* Bottom Level - Shaker */}
-            <div className="text-center">
-              <div className="text-lg font-semibold text-blue-700 mb-1">
-                الاداري
+              <div className="text-center">
+                <div className="text-lg font-semibold text-blue-700 mb-1">
+                  الاداري
+                </div>
+                <div className="text-xl font-medium">شاكر الحسن الشريف</div>
               </div>
-              <div className="text-xl font-medium">شاكر الحسن الشريف</div>
             </div>
           </div>
         </div>
