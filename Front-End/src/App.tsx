@@ -180,7 +180,7 @@ function HomePage({
               <div className="text-lg font-semibold text-blue-700 mb-1">
                 مدير مشروع
               </div>
-              <div className="text-xl font-medium">م/ ماجد محمد ابو شناق</div>
+              <div className="text-xl font-medium">م/ ماجد محمد بشناق</div>
             </div>
 
             {/* Middle Level - Youssef and Amro side by side */}
