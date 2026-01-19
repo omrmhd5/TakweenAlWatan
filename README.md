@@ -78,12 +78,12 @@ A full-stack web application built to digitize and streamline pest control field
   <img width="1918" height="1078" alt="Detailed Excel Sheet" src="https://github.com/user-attachments/assets/c5d02ad5-c2eb-4b4f-9c5d-e7b5986dce60" />
 
 * Mobile View
-  <img width="667" height="900" alt="Mobile View" src="https://github.com/user-attachments/assets/9ee7277f-405c-4d06-8e17-bfb290bbbf48" />
+* <img width="667" height="900" alt="Mobile View" src="https://github.com/user-attachments/assets/9ee7277f-405c-4d06-8e17-bfb290bbbf48" />
 
----
 
-## 📄 License
-This project is proprietary and built as part of a freelance contract. Not open source.
+## Live Demo 🚀
+
+[**View Live Demo**](https://takween-al-watan.vercel.app/)
 
 ---
 
