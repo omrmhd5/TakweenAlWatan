@@ -91,4 +91,7 @@ A full-stack web application built to digitize and streamline pest control field
 
 👤 **Omar Mahmoud**
 📧 [omrmhd54@gmail.com](mailto:omrmhd54@gmail.com)
+💼 [LinkedIn](https://www.linkedin.com/in/omrmhd5/)
+🌐 [Portfolio](https://omarmahmoud.dev/)
 🔗 [GitHub](https://github.com/omrmhd5)
+
