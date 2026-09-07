@@ -7,11 +7,13 @@ A full-stack web application built to digitize and streamline pest control field
 ## 🔧 Features
 
 ### 👷‍♂️ Field Worker Interface (No Login)
+
 - Smart Arabic RTL form for submitting daily field reports
 - Fields include date, municipality, district, treatment type, trap data, and site categories
 - Submissions stored and auto-organized by date and location
 
 ### 👨‍💼 Admin Dashboard (Secure Access)
+
 - JWT-based login system
 - Real-time stats: total reports, active municipalities, common site types
 - Filter by date and location
@@ -23,6 +25,7 @@ A full-stack web application built to digitize and streamline pest control field
 ---
 
 ## 💡 Impact
+
 - Reduced daily report processing time by over **60%**
 - Replaced 100% of manual Excel tracking
 - Improved reporting accuracy and visibility for supervisors
@@ -31,72 +34,105 @@ A full-stack web application built to digitize and streamline pest control field
 
 ## 📦 Tech Stack
 
-| Layer         | Tech               |
-|---------------|--------------------|
-| Frontend      | React, TailwindCSS |
-| Backend       | Node.js, Express   |
-| Database      | MongoDB (Atlas)    |
-| Auth          | JWT                |
-| Excel Export  | ExcelJS            |
-| Deployment    | Vercel, Fly.io     |
+| Layer        | Tech                     |
+| ------------ | ------------------------ |
+| Frontend     | React, TailwindCSS       |
+| Backend      | Node.js, Express         |
+| Database     | MongoDB (Atlas)          |
+| Auth         | JWT                      |
+| Excel Export | ExcelJS                  |
+| Deployment   | Vercel (FE), Render (BE) |
 
 ---
 
 ## 🌐 Deployment Notes
-- Fully responsive and RTL-friendly UI
+
+- Fully responsive and RTL-friendly UI with English / Arabic toggle
 - Supports desktop, tablet, and mobile devices
-- Hosted externally with MongoDB Atlas
+- Demo hosted on Vercel + Render with MongoDB Atlas; first load after idle may take a few seconds
+
+---
+
+## 🎬 Site Demo
+
+**[▶ Watch site walkthrough](./docs/takween-al-watan-demo.mp4)**
+
+English home → brief Arabic glance → scroll home → field entry with GPS capture and site counts → save report → admin login → detailed report modal → weekly report modal.
 
 ---
 
 ## 📸 Screenshots
-* Homepage
-  <img width="1919" height="914" alt="Home Page" src="https://github.com/user-attachments/assets/d0c2edb2-099c-477a-80b9-007aa8ccec3b" />
 
-* Field Worker Page  
-  <img width="1918" height="913" alt="Field Worker Page" src="https://github.com/user-attachments/assets/7ff52465-0679-47a6-99a4-5c5dc86913e7" />
-  
-* Data Input Form
-  <img width="1919" height="916" alt="Data Input Form" src="https://github.com/user-attachments/assets/53b90cc0-5094-4ce5-9e01-47942e6fadee" />
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Home</strong><br />
+      <img width="100%" alt="Home" src="./docs/screenshots/01-home.png" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Field Data Entry</strong><br />
+      <img width="100%" alt="Field Data Entry" src="./docs/screenshots/02-field-worker.png" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Target Sites</strong><br />
+      <img width="100%" alt="Target Sites" src="./docs/screenshots/03-data-input-form.png" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Confirm Save</strong><br />
+      <img width="100%" alt="Confirm Save" src="./docs/screenshots/04-confirmation.png" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Admin Login</strong><br />
+      <img width="100%" alt="Admin Login" src="./docs/screenshots/05-login.png" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Admin Dashboard</strong><br />
+      <img width="100%" alt="Admin Dashboard" src="./docs/screenshots/06-admin-dashboard.png" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Weekly Report View</strong><br />
+      <img width="100%" alt="Weekly Report View" src="./docs/screenshots/07-weekly-report-view.png" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Weekly Excel Export</strong><br />
+      <img width="100%" alt="Weekly Excel Export" src="./docs/screenshots/08-weekly-excel-sheet.png" />
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <strong>Detailed Report View</strong><br />
+      <img width="100%" alt="Detailed Report View" src="./docs/screenshots/09-detailed-report-view.png" />
+    </td>
+    <td width="50%" valign="top">
+      <strong>Detailed Excel Export</strong><br />
+      <img width="100%" alt="Detailed Excel Export" src="./docs/screenshots/10-detailed-excel-sheet.png" />
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" valign="top">
+      <strong>Mobile Admin Dashboard</strong><br />
+      <img width="100%" alt="Mobile Admin Dashboard" src="./docs/screenshots/11-mobile-view.png" />
+    </td>
+  </tr>
+</table>
 
-* Login Page
-  <img width="1918" height="913" alt="Login Page" src="https://github.com/user-attachments/assets/1a9b027d-4368-431e-92a6-67ed8663fe05" />
-  
-* Admin Dashboard
-  <img width="1919" height="916" alt="Admin Dashboard" src="https://github.com/user-attachments/assets/b62b28de-bb8e-4261-834a-39ea409ca629" />
-  
-* Weekly Report View
-  <img width="1919" height="917" alt="Weekly Report View" src="https://github.com/user-attachments/assets/44dc35d9-ee1b-4ae0-8fe6-b7ca036d66fc" />
-  
-* Weekly Excel Sheet
-  <img width="1919" height="1079" alt="Weekly Excel Sheet" src="https://github.com/user-attachments/assets/9ac2a872-113b-42bc-8956-330c1bb4c402" />
-  
-* Detailed Report View
-  <img width="1919" height="914" alt="Detailed Report View" src="https://github.com/user-attachments/assets/c00f28db-24a1-4553-a0e8-9af784894f9e" />
-  
-* Detailed Excel Sheet
-  <img width="1918" height="1078" alt="Detailed Excel Sheet" src="https://github.com/user-attachments/assets/c5d02ad5-c2eb-4b4f-9c5d-e7b5986dce60" />
-
-* Mobile View
-* <img width="667" height="900" alt="Mobile View" src="https://github.com/user-attachments/assets/9ee7277f-405c-4d06-8e17-bfb290bbbf48" />
-
+---
 
 ## Live Demo 🚀
 
-[**View live demo**](https://takween-al-watan-demo.vercel.app)
+[**View Live Demo**](https://takween-al-watan-demo.vercel.app)
 
-- App: https://takween-al-watan-demo.vercel.app
-- API: https://takween-al-watan-demo.onrender.com
+| Role  | Username | Password |
+| ----- | -------- | -------- |
+| Admin | admin    | admin123 |
 
-The first request may take ~30 seconds if the free API is asleep.
-
-### Demo login
-
-| Role  | Username | Password  |
-| ----- | -------- | --------- |
-| Admin | admin    | admin123  |
-
-Switch the UI to English before exporting Excel — the spreadsheet language follows the app language.
+Field workers use **Data entry** with no login.
 
 ---
 
@@ -107,4 +143,3 @@ Switch the UI to English before exporting Excel — the spreadsheet language fol
 💼 [LinkedIn](https://www.linkedin.com/in/omrmhd5/)
 🌐 [Portfolio](https://omarmahmoud.dev/)
 🔗 [GitHub](https://github.com/omrmhd5)
-
