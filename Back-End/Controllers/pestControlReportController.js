@@ -1,6 +1,6 @@
 const PestControlReport = require("../Models/PestControlReport");
 const ExcelJS = require("exceljs");
-const { t } = require("../lib/i18n");
+const { t, label, localeTag, getLang } = require("../lib/i18n");
 
 // Site type mapping to handle data migration from old names to new names
 const siteTypeMapping = {
@@ -195,7 +195,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     }));
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("تقرير مكافحة الآفات");
+    const worksheet = workbook.addWorksheet(t(req, "excel.sheet"));
 
     // Define all possible site types and municipalities
     const siteTypes = [
@@ -280,7 +280,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       // Add company header and logo area
       worksheet.mergeCells("A1:J3");
       const headerCell = worksheet.getCell("A1");
-      headerCell.value = "تقرير مكافحة الآفات - شركة تكوين الوطن";
+      headerCell.value = t(req, "excel.companyHeader");
       headerCell.font = {
         bold: true,
         size: 20,
@@ -303,7 +303,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       // Add generation date and time
       worksheet.mergeCells("A4:J4");
       const dateCell = worksheet.getCell("A4");
-      dateCell.value = `تاريخ الإنشاء: ${new Date().toLocaleString("ar-SA")}`;
+      dateCell.value = t(req, "excel.createdAt", {
+        when: new Date().toLocaleString(localeTag(req)),
+      });
       dateCell.font = { size: 11, italic: true, color: { argb: "FF666666" } };
       dateCell.alignment = { horizontal: "center" };
       dateCell.fill = {
@@ -339,31 +341,20 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       for (const [groupKey, groupReports] of Object.entries(selectedGroups)) {
         if (type === "daily") {
           // Display the date as the original Gregorian date (YYYY-MM-DD)
-          reportTitle = `تقرير يومي - ${groupKey}`;
+          reportTitle = t(req, "excel.dailyTitle", { date: groupKey });
           fileNameDate = groupKey;
         } else if (type === "weekly") {
           const [start, end] = groupKey.split("_");
-          const startDate = new Date(start).toLocaleDateString("ar-SA");
-          const endDate = new Date(end).toLocaleDateString("ar-SA");
-          reportTitle = `تقرير أسبوعي - من ${startDate} إلى ${endDate}`;
+          const startDate = new Date(start).toLocaleDateString(localeTag(req));
+          const endDate = new Date(end).toLocaleDateString(localeTag(req));
+          reportTitle = t(req, "excel.weeklyTitle", { start: startDate, end: endDate });
           fileNameDate = groupKey;
         } else if (type === "monthly") {
           const [year, month] = groupKey.split("-");
-          const monthNames = {
-            "01": "يناير",
-            "02": "فبراير",
-            "03": "مارس",
-            "04": "أبريل",
-            "05": "مايو",
-            "06": "يونيو",
-            "07": "يوليو",
-            "08": "أغسطس",
-            "09": "سبتمبر",
-            10: "أكتوبر",
-            11: "نوفمبر",
-            12: "ديسمبر",
-          };
-          reportTitle = `تقرير شهري - ${monthNames[month]} ${year}`;
+          reportTitle = t(req, "excel.monthlyTitle", {
+            month: t(req, `excel.months.${month}`),
+            year,
+          });
           fileNameDate = groupKey;
         }
 
@@ -421,18 +412,18 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
         // Create statistics cards
         const statsData = [
-          { label: "إجمالي المواقع", value: totalSites, icon: "📊" },
+          { label: t(req, "excel.totalSites"), value: totalSites, icon: "📊" },
           {
-            label: "أعلى نوع موقع",
-            value: `${highestSiteType[0]} (${highestSiteType[1]})`,
+            label: t(req, "excel.highestSite"),
+            value: `${label(req, "sites", highestSiteType[0])} (${highestSiteType[1]})`,
             icon: "🎯",
           },
           {
-            label: "البلدية الأكثر نشاطاً",
-            value: mostActiveMunicipality,
+            label: t(req, "excel.mostActive"),
+            value: label(req, "municipalities", mostActiveMunicipality),
             icon: "🏢",
           },
-          { label: "عدد التقارير", value: groupReports.length, icon: "📋" },
+          { label: t(req, "excel.reportCount"), value: groupReports.length, icon: "📋" },
         ];
 
         statsData.forEach((stat, index) => {
@@ -466,9 +457,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
         // Table header with gradient effect
         const headerVals = [
-          "المواقع المستهدفة",
-          ...allMunicipalities,
-          "الإجمالي",
+          t(req, "excel.targetSites"),
+          ...allMunicipalities.map((m) => label(req, "municipalities", m)),
+          t(req, "excel.total"),
         ];
         headerVals.forEach((val, idx) => {
           const cell = worksheet.getCell(tableStartRow, idx + 1);
@@ -505,7 +496,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
           });
           const rowTotal = rowData.reduce((a, b) => a + b, 0);
 
-          [siteType, ...rowData, rowTotal].forEach((val, idx) => {
+          [label(req, "sites", siteType), ...rowData, rowTotal].forEach((val, idx) => {
             const cell = worksheet.getCell(rowPtr, idx + 1);
             cell.value = val;
             cell.alignment = { horizontal: "center", vertical: "middle" };
@@ -579,7 +570,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
         });
         const grandTotal = totals.reduce((a, b) => a + b, 0);
 
-        ["الإجمالي", ...totals, grandTotal].forEach((val, idx) => {
+        [t(req, "excel.total"), ...totals, grandTotal].forEach((val, idx) => {
           const cell = worksheet.getCell(rowPtr, idx + 1);
           cell.value = val;
           cell.font = {
@@ -605,7 +596,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
         const footerRow = rowPtr + 3;
         worksheet.mergeCells(`A${footerRow}:J${footerRow}`);
         const footerCell = worksheet.getCell(footerRow, 1);
-        footerCell.value = "© شركة تكوين الوطن - قسم مكافحة الآفات";
+        footerCell.value = t(req, "excel.footer");
         footerCell.font = {
           italic: true,
           size: 10,
@@ -643,8 +634,12 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       // Create proper filename
       const dateStr = fileNameDate || new Date().toISOString().split("T")[0];
       const typeStr =
-        type === "daily" ? "يومي" : type === "weekly" ? "أسبوعي" : "شهري";
-      const fileName = `تقرير_${typeStr}_${dateStr}.xlsx`;
+        type === "daily"
+          ? t(req, "excel.typeDaily")
+          : type === "weekly"
+          ? t(req, "excel.typeWeekly")
+          : t(req, "excel.typeMonthly");
+      const fileName = t(req, "excel.fileSummary", { type: typeStr, date: dateStr });
 
       const encodedFileName = encodeURIComponent(fileName);
       res.setHeader(
@@ -689,7 +684,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Add company header and logo area (matching other reports)
     worksheet.mergeCells("A1:J3");
     const headerCell = worksheet.getCell("A1");
-    headerCell.value = "تقرير مفصل - مكافحة الآفات - شركة تكوين الوطن";
+    headerCell.value = t(req, "excel.detailedHeader");
     headerCell.font = {
       bold: true,
       size: 20,
@@ -712,7 +707,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Add generation date and time
     worksheet.mergeCells("A4:J4");
     const dateCell = worksheet.getCell("A4");
-    dateCell.value = `تاريخ الإنشاء: ${new Date().toLocaleString("ar-SA")}`;
+    dateCell.value = t(req, "excel.createdAt", {
+      when: new Date().toLocaleString(localeTag(req)),
+    });
     dateCell.font = { size: 11, italic: true, color: { argb: "FF666666" } };
     dateCell.alignment = { horizontal: "center" };
     dateCell.fill = {
@@ -724,7 +721,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Display the date as the original Gregorian date (YYYY-MM-DD)
     worksheet.mergeCells("A6:J6");
     const titleCell = worksheet.getCell("A6");
-    titleCell.value = `تقرير تفصيلي - ${selectedReport.date}`;
+    titleCell.value = t(req, "excel.detailedTitle", { date: selectedReport.date });
     titleCell.font = {
       bold: true,
       size: 18,
@@ -747,17 +744,29 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Enhanced metadata section with card-style layout
     const metaStartRow = 8;
     const metaData = [
-      { label: "التاريخ (ميلادي)", value: selectedReport.date, icon: "📅" },
-      { label: "اسم الأخصائي", value: selectedReport.workerName, icon: "👨‍💼" },
-      { label: "البلدية", value: selectedReport.municipality, icon: "🏢" },
-      { label: "الحي", value: selectedReport.district, icon: "🏘️" },
-      { label: "نوع المكافحة", value: selectedReport.controlType, icon: "🔧" },
-      { label: "إجمالي المواقع", value: totalSites, icon: "📊" },
+      { label: t(req, "excel.gregorianDate"), value: selectedReport.date, icon: "📅" },
+      { label: t(req, "excel.specialist"), value: selectedReport.workerName, icon: "👨‍💼" },
       {
-        label: "الإحداثيات",
+        label: t(req, "excel.municipality"),
+        value: label(req, "municipalities", selectedReport.municipality),
+        icon: "🏢",
+      },
+      {
+        label: t(req, "excel.district"),
+        value: label(req, "districts", selectedReport.district),
+        icon: "🏘️",
+      },
+      {
+        label: t(req, "excel.controlType"),
+        value: label(req, "controlTypes", selectedReport.controlType),
+        icon: "🔧",
+      },
+      { label: t(req, "excel.totalSites"), value: totalSites, icon: "📊" },
+      {
+        label: t(req, "excel.coordinates"),
         value: selectedReport.coordinates
           ? `${selectedReport.coordinates.latitude}, ${selectedReport.coordinates.longitude}`
-          : "غير محدد",
+          : t(req, "excel.unspecified"),
         icon: "📍",
       },
     ];
@@ -796,7 +805,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Traps section title
     worksheet.mergeCells(`A${trapsStartRow}:J${trapsStartRow}`);
     const trapsTitleCell = worksheet.getCell(trapsStartRow, 1);
-    trapsTitleCell.value = "🪤 معلومات المصائد";
+    trapsTitleCell.value = `🪤 ${t(req, "excel.trapsTitle")}`;
     trapsTitleCell.font = {
       bold: true,
       size: 16,
@@ -820,7 +829,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     const bgTrapsRow = trapsStartRow + 2;
     worksheet.mergeCells(`A${bgTrapsRow}:C${bgTrapsRow}`);
     const bgTrapsCell = worksheet.getCell(bgTrapsRow, 1);
-    bgTrapsCell.value = "🎯 مصائد BG brow";
+    bgTrapsCell.value = `🎯 ${t(req, "excel.bgTraps")}`;
     bgTrapsCell.font = { bold: true, size: 12, color: { argb: "FF2E5090" } };
     bgTrapsCell.alignment = { horizontal: "center", vertical: "middle" };
     bgTrapsCell.fill = {
@@ -837,7 +846,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     worksheet.mergeCells(`D${bgTrapsRow}:E${bgTrapsRow}`);
     const bgCountCell = worksheet.getCell(bgTrapsRow, 4);
-    bgCountCell.value = `العدد: ${selectedReport.bgTraps?.count || 0}`;
+    bgCountCell.value = t(req, "excel.count", {
+      count: selectedReport.bgTraps?.count || 0,
+    });
     bgCountCell.font = { bold: true, size: 11, color: { argb: "FF2E5090" } };
     bgCountCell.alignment = { horizontal: "center", vertical: "middle" };
     bgCountCell.fill = {
@@ -855,9 +866,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     worksheet.mergeCells(`F${bgTrapsRow}:J${bgTrapsRow}`);
     const bgStatusCell = worksheet.getCell(bgTrapsRow, 6);
     const bgStatus = selectedReport.bgTraps?.isPositive
-      ? "إيجابي ✅"
-      : "سلبي ❌";
-    bgStatusCell.value = `الحالة: ${bgStatus}`;
+      ? `${t(req, "excel.positive")} ✅`
+      : `${t(req, "excel.negative")} ❌`;
+    bgStatusCell.value = t(req, "excel.status", { status: bgStatus });
     bgStatusCell.font = {
       bold: true,
       size: 12,
@@ -884,7 +895,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     const smartTrapsRow = bgTrapsRow + 1;
     worksheet.mergeCells(`A${smartTrapsRow}:C${smartTrapsRow}`);
     const smartTrapsCell = worksheet.getCell(smartTrapsRow, 1);
-    smartTrapsCell.value = "🤖 مصائد ذكية";
+    smartTrapsCell.value = `🤖 ${t(req, "excel.smartTraps")}`;
     smartTrapsCell.font = { bold: true, size: 12, color: { argb: "FF2E5090" } };
     smartTrapsCell.alignment = { horizontal: "center", vertical: "middle" };
     smartTrapsCell.fill = {
@@ -901,7 +912,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     worksheet.mergeCells(`D${smartTrapsRow}:E${smartTrapsRow}`);
     const smartCountCell = worksheet.getCell(smartTrapsRow, 4);
-    smartCountCell.value = `العدد: ${selectedReport.smartTraps?.count || 0}`;
+    smartCountCell.value = t(req, "excel.count", {
+      count: selectedReport.smartTraps?.count || 0,
+    });
     smartCountCell.font = { bold: true, size: 11, color: { argb: "FF2E5090" } };
     smartCountCell.alignment = { horizontal: "center", vertical: "middle" };
     smartCountCell.fill = {
@@ -919,9 +932,9 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     worksheet.mergeCells(`F${smartTrapsRow}:J${smartTrapsRow}`);
     const smartStatusCell = worksheet.getCell(smartTrapsRow, 6);
     const smartStatus = selectedReport.smartTraps?.isPositive
-      ? "إيجابي ✅"
-      : "سلبي ❌";
-    smartStatusCell.value = `الحالة: ${smartStatus}`;
+      ? `${t(req, "excel.positive")} ✅`
+      : `${t(req, "excel.negative")} ❌`;
+    smartStatusCell.value = t(req, "excel.status", { status: smartStatus });
     smartStatusCell.font = {
       bold: true,
       size: 12,
@@ -950,7 +963,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       // Comments section title
       worksheet.mergeCells(`A${commentsStartRow}:J${commentsStartRow}`);
       const commentsTitleCell = worksheet.getCell(commentsStartRow, 1);
-      commentsTitleCell.value = "💬 الملاحظات والتعليقات";
+      commentsTitleCell.value = `💬 ${t(req, "excel.notesTitle")}`;
       commentsTitleCell.font = {
         bold: true,
         size: 16,
@@ -984,7 +997,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
         italic: true,
       };
       commentContentCell.alignment = {
-        horizontal: "right",
+        horizontal: getLang(req) === "en" ? "left" : "right",
         vertical: "middle",
         wrapText: true,
       };
@@ -1009,7 +1022,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Table title
     worksheet.mergeCells(`A${tableStartRow}:J${tableStartRow}`);
     const tableTitleCell = worksheet.getCell(tableStartRow, 1);
-    tableTitleCell.value = "📋 تفاصيل المواقع المستهدفة";
+    tableTitleCell.value = `📋 ${t(req, "excel.sitesDetails")}`;
     tableTitleCell.font = {
       bold: true,
       size: 16,
@@ -1031,7 +1044,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     // Table headers
     const headerRow = tableStartRow + 2;
-    const headers = ["نوع الموقع", "العدد"];
+    const headers = [t(req, "excel.siteType"), t(req, "excel.countHeader")];
 
     headers.forEach((header, index) => {
       let colSpan, startCol;
@@ -1082,7 +1095,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
       // Site type column
       worksheet.mergeCells(dataRow, 1, dataRow, 6);
       const siteTypeCell = worksheet.getCell(dataRow, 1);
-      siteTypeCell.value = siteType;
+      siteTypeCell.value = label(req, "sites", siteType);
       siteTypeCell.font = {
         bold: true,
         color: { argb: "FFFFFFFF" },
@@ -1130,7 +1143,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     // Enhanced total row
     worksheet.mergeCells(dataRow, 1, dataRow, 6);
     const totalLabelCell = worksheet.getCell(dataRow, 1);
-    totalLabelCell.value = "الإجمالي";
+    totalLabelCell.value = t(req, "excel.total");
     totalLabelCell.font = {
       bold: true,
       color: { argb: "FFFFFFFF" },
@@ -1174,7 +1187,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     const footerRow = dataRow + 3;
     worksheet.mergeCells(`A${footerRow}:J${footerRow}`);
     const footerCell = worksheet.getCell(footerRow, 1);
-    footerCell.value = "© شركة تكوين الوطن - قسم مكافحة الآفات";
+    footerCell.value = t(req, "excel.footer");
     footerCell.font = {
       italic: true,
       size: 10,
@@ -1210,7 +1223,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     const reportDateStr = new Date(selectedReport.date)
       .toISOString()
       .split("T")[0];
-    const fileName = `تقرير_مفصل_${reportDateStr}.xlsx`;
+    const fileName = t(req, "excel.fileDetailed", { date: reportDateStr });
     const encodedFileName = encodeURIComponent(fileName);
 
     res.setHeader(
