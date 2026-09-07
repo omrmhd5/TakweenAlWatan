@@ -49,6 +49,28 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             {t("login.title")}
           </h2>
           <p className="text-gray-600">{t("login.subtitle")}</p>
+          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-start">
+            <p className="font-semibold text-gray-900 mb-2 text-center">
+              {t("login.demoHeading")}
+            </p>
+            <div className="space-y-1 text-gray-800 select-text">
+              <p>
+                <span className="font-medium">{t("login.role")}:</span>{" "}
+                {t("login.adminRole")}
+              </p>
+              <p>
+                <span className="font-medium">{t("login.username")}:</span>{" "}
+                admin
+              </p>
+              <p>
+                <span className="font-medium">{t("login.password")}:</span>{" "}
+                admin123
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 text-center mt-3">
+              {t("login.demoHint")}
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,28 +131,6 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             {isLoading ? t("login.submitting") : t("login.submit")}
           </button>
         </form>
-
-        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm">
-          <p className="font-semibold text-gray-900 mb-2 text-center">
-            {t("login.demoHeading")}
-          </p>
-          <p className="text-xs text-gray-500 text-center mb-3">
-            {t("login.demoHint")}
-          </p>
-          <div className="space-y-1 text-gray-800 select-text">
-            <p>
-              <span className="font-medium">{t("login.role")}:</span>{" "}
-              {t("login.adminRole")}
-            </p>
-            <p>
-              <span className="font-medium">{t("login.username")}:</span> admin
-            </p>
-            <p>
-              <span className="font-medium">{t("login.password")}:</span>{" "}
-              admin123
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
