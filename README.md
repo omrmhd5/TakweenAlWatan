@@ -83,7 +83,20 @@ A full-stack web application built to digitize and streamline pest control field
 
 ## Live Demo 🚀
 
-[**View Live Demo**](https://takween-al-watan.vercel.app/)
+[**View live demo**](https://takween-al-watan-demo.vercel.app)
+
+- App: https://takween-al-watan-demo.vercel.app
+- API: https://takween-al-watan-demo.onrender.com
+
+The first request may take ~30 seconds if the free API is asleep.
+
+### Demo login
+
+| Role  | Username | Password  |
+| ----- | -------- | --------- |
+| Admin | admin    | admin123  |
+
+Switch the UI to English before exporting Excel — the spreadsheet language follows the app language.
 
 ---
 
