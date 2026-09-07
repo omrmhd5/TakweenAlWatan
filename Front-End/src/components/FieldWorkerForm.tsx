@@ -14,6 +14,7 @@ import {
 import { useToast } from "../contexts/ToastContext";
 import { submitPestControlData } from "../services/api";
 import { districtsByMunicipality, controlTypes } from "../services/api";
+import { useTranslation } from "react-i18next";
 
 interface Coordinates {
   latitude: number;
@@ -55,6 +56,7 @@ const municipalities = [
 ];
 
 export default function FieldWorkerForm() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -86,7 +88,7 @@ export default function FieldWorkerForm() {
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      showToast("متصفحك لا يدعم تحديد الموقع", "error");
+      showToast(t("form.geoUnsupported"), "error");
       setLocationPermission("denied");
       return;
     }
@@ -99,12 +101,12 @@ export default function FieldWorkerForm() {
           longitude: position.coords.longitude,
         });
         setLocationPermission("granted");
-        showToast("تم تحديد موقعك بنجاح", "success");
+        showToast(t("form.geoOk"), "success");
       },
       (error) => {
         console.error("Error getting location:", error);
         setLocationPermission("denied");
-        showToast("فشل في تحديد موقعك", "error");
+        showToast(t("form.geoFail"), "error");
       },
       {
         enableHighAccuracy: true,
@@ -210,19 +212,19 @@ export default function FieldWorkerForm() {
 
   const handleSubmit = async () => {
     if (!formData.municipality) {
-      showToast("يرجى اختيار البلدية", "error");
+      showToast(t("form.needMunicipality"), "error");
       return;
     }
     if (!formData.district) {
-      showToast("يرجى اختيار الحي أو إدخال اسم حي مخصص", "error");
+      showToast(t("form.needDistrict"), "error");
       return;
     }
     if (!formData.workerName) {
-      showToast("يرجى إدخال اسم الأخصائي", "error");
+      showToast(t("form.needWorker"), "error");
       return;
     }
     if (!formData.controlType) {
-      showToast("يرجى اختيار نوع المكافحة", "error");
+      showToast(t("form.needControl"), "error");
       return;
     }
 
@@ -252,10 +254,10 @@ export default function FieldWorkerForm() {
         coordinates: coordinates || undefined,
       };
       await submitPestControlData(submitData);
-      showToast("تم حفظ البيانات بنجاح", "success");
+      showToast(t("form.saved"), "success");
       resetForm();
     } catch (error) {
-      showToast("حدث خطأ أثناء حفظ البيانات", "error");
+      showToast(t("form.saveError"), "error");
     } finally {
       setIsSubmitting(false);
       setShowConfirmation(false);
@@ -294,9 +296,9 @@ export default function FieldWorkerForm() {
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            نموذج إدخال البيانات الميدانية
+            {t("form.title")}
           </h2>
-          <p className="text-gray-600">يرجى تعبئة جميع البيانات بدقة</p>
+          <p className="text-gray-600">{t("form.subtitle")}</p>
         </div>
 
         {/* Basic Information */}
@@ -304,7 +306,7 @@ export default function FieldWorkerForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Calendar className="w-4 h-4 inline ml-2" />
-              التاريخ
+              {t("form.date")}
             </label>
             <input
               type="date"
@@ -320,14 +322,14 @@ export default function FieldWorkerForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Shield className="w-4 h-4 inline ml-2" />
-              نوع المكافحة *
+              {t("form.controlType")} *
             </label>
             <select
               value={formData.controlType}
               onChange={(e) => handleInputChange("controlType", e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required>
-              <option value="">اختر نوع المكافحة</option>
+              <option value="">{t("form.selectControlType")}</option>
               {controlTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
@@ -339,7 +341,7 @@ export default function FieldWorkerForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <MapPin className="w-4 h-4 inline ml-2" />
-              البلدية *
+              {t("form.municipality")} *
             </label>
             <select
               value={formData.municipality}
@@ -351,7 +353,7 @@ export default function FieldWorkerForm() {
               }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required>
-              <option value="">اختر البلدية</option>
+              <option value="">{t("form.selectMunicipality")}</option>
               {municipalities.map((municipality) => (
                 <option key={municipality} value={municipality}>
                   {municipality}
@@ -363,7 +365,7 @@ export default function FieldWorkerForm() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <MapPin className="w-4 h-4 inline ml-2" />
-              الحي *
+              {t("form.district")} *
             </label>
             <div className="space-y-2">
               <select
@@ -372,7 +374,7 @@ export default function FieldWorkerForm() {
                 disabled={!formData.municipality}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 required>
-                <option value="">اختر الحي</option>
+                <option value="">{t("form.selectDistrict")}</option>
                 {availableDistricts.map((district) => (
                   <option key={district} value={district}>
                     {district}
@@ -381,12 +383,12 @@ export default function FieldWorkerForm() {
               </select>
 
               <div className="text-center">
-                <span className="text-sm text-gray-500">أو</span>
+                <span className="text-sm text-gray-500">{t("form.or")}</span>
               </div>
 
               <input
                 type="text"
-                placeholder="أدخل اسم حي مخصص"
+                placeholder={t("form.customDistrict")}
                 value={customDistrict}
                 onChange={(e) => {
                   setCustomDistrict(e.target.value);
@@ -401,13 +403,13 @@ export default function FieldWorkerForm() {
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4 inline ml-2" />
-              اسم الأخصائي *
+              {t("form.workerName")} *
             </label>
             <input
               type="text"
               value={formData.workerName}
               onChange={(e) => handleInputChange("workerName", e.target.value)}
-              placeholder="أدخل اسم الأخصائي"
+              placeholder={t("form.workerPlaceholder")}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
@@ -420,7 +422,7 @@ export default function FieldWorkerForm() {
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
               <Navigation className="w-5 h-5 text-gray-600" />
               <span className="text-sm font-medium text-gray-700">
-                حالة الموقع:
+                {t("form.locationStatus")}
               </span>
               <span
                 className={`text-sm px-2 py-1 rounded-full ${
@@ -431,21 +433,21 @@ export default function FieldWorkerForm() {
                     : "bg-yellow-100 text-yellow-800"
                 }`}>
                 {locationPermission === "granted"
-                  ? "تم تحديد الموقع"
+                  ? t("form.locationGranted")
                   : locationPermission === "denied"
-                  ? "تم رفض تحديد الموقع"
-                  : "جاري تحديد الموقع..."}
+                  ? t("form.locationDenied")
+                  : t("form.locationPending")}
               </span>
             </div>
             <button
               onClick={getCurrentLocation}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-              تحديث الموقع
+              {t("form.refreshLocation")}
             </button>
           </div>
           {coordinates && (
             <div className="mt-2 text-sm text-gray-600">
-              الإحداثيات: {coordinates.latitude.toFixed(6)},{" "}
+              {t("form.coordinates")}: {coordinates.latitude.toFixed(6)},{" "}
               {coordinates.longitude.toFixed(6)}
             </div>
           )}
@@ -454,14 +456,14 @@ export default function FieldWorkerForm() {
         {/* Trap Fields */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            المصائد
+            {t("form.traps")}
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* BG Traps */}
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h4 className="text-lg font-medium text-gray-900 mb-4">
-                مصائد BG brow
+                {t("form.bgTraps")}
               </h4>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -479,7 +481,7 @@ export default function FieldWorkerForm() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
                     <span className="mr-2 text-sm font-medium text-gray-700">
-                      ايجابي
+                      {t("form.positive")}
                     </span>
                   </label>
                   <label className="flex items-center">
@@ -496,13 +498,13 @@ export default function FieldWorkerForm() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
                     <span className="mr-2 text-sm font-medium text-gray-700">
-                      سلبي
+                      {t("form.negative")}
                     </span>
                   </label>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    العدد
+                    {t("form.count")}
                   </label>
                   <input
                     type="number"
@@ -523,7 +525,7 @@ export default function FieldWorkerForm() {
             {/* Smart Traps */}
             <div className="bg-gray-50 p-4 rounded-lg border">
               <h4 className="text-lg font-medium text-gray-900 mb-4">
-                مصائد ذكية
+                {t("form.smartTraps")}
               </h4>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4 rtl:space-x-reverse">
@@ -541,7 +543,7 @@ export default function FieldWorkerForm() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
                     <span className="mr-2 text-sm font-medium text-gray-700">
-                      ايجابي
+                      {t("form.positive")}
                     </span>
                   </label>
                   <label className="flex items-center">
@@ -558,13 +560,13 @@ export default function FieldWorkerForm() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
                     <span className="mr-2 text-sm font-medium text-gray-700">
-                      سلبي
+                      {t("form.negative")}
                     </span>
                   </label>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    العدد
+                    {t("form.count")}
                   </label>
                   <input
                     type="number"
@@ -587,9 +589,9 @@ export default function FieldWorkerForm() {
         {/* Site Counts */}
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-            المواقع المستهدفة
+            {t("form.sites")}
             <span className="text-sm font-normal text-gray-600 mr-2">
-              (المجموع: {totalSites})
+              ({t("form.total")}: {totalSites})
             </span>
           </h3>
 
@@ -623,12 +625,12 @@ export default function FieldWorkerForm() {
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <MessageSquare className="w-4 h-4 inline ml-2" />
-            ملاحظات (اختياري)
+            {t("form.comment")}
           </label>
           <textarea
             value={formData.comment}
             onChange={(e) => handleInputChange("comment", e.target.value)}
-            placeholder="أدخل أي ملاحظات إضافية..."
+            placeholder={t("form.commentPlaceholder")}
             rows={4}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           />
@@ -640,7 +642,7 @@ export default function FieldWorkerForm() {
             onClick={resetForm}
             className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center space-x-2 rtl:space-x-reverse">
             <RotateCcw className="w-4 h-4" />
-            <span>إعادة تعيين</span>
+            <span>{t("form.reset")}</span>
           </button>
 
           <button
@@ -653,7 +655,7 @@ export default function FieldWorkerForm() {
             }
             className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 rtl:space-x-reverse">
             <Save className="w-4 h-4" />
-            <span>حفظ البيانات</span>
+            <span>{t("form.save")}</span>
           </button>
         </div>
       </div>
@@ -721,6 +723,7 @@ function ConfirmationModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation();
   React.useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -733,56 +736,60 @@ function ConfirmationModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl max-h-[80vh] overflow-y-auto">
         <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">
-          تأكيد الحفظ
+          {t("form.confirmTitle")}
         </h3>
         <div className="space-y-2 mb-6 text-sm">
           <p>
-            <strong>التاريخ:</strong> {date}
+            <strong>{t("form.date")}:</strong> {date}
           </p>
           <p>
-            <strong>نوع المكافحة:</strong> {controlType}
+            <strong>{t("form.controlType")}:</strong> {controlType}
           </p>
           <p>
-            <strong>البلدية:</strong> {municipality}
+            <strong>{t("form.municipality")}:</strong> {municipality}
           </p>
           <p>
-            <strong>الحي:</strong> {district}
+            <strong>{t("form.district")}:</strong> {district}
           </p>
           <p>
-            <strong>اسم الأخصائي:</strong> {workerName}
+            <strong>{t("form.workerName")}:</strong> {workerName}
           </p>
           <p>
-            <strong>إجمالي المواقع:</strong> {totalSites}
+            <strong>{t("form.sites")}:</strong> {totalSites}
           </p>
           <p>
-            <strong>مصائد BG brow:</strong>{" "}
-            {bgTraps.isPositive ? `ايجابي (${bgTraps.count})` : "سلبي"}
+            <strong>{t("form.bgTraps")}:</strong>{" "}
+            {bgTraps.isPositive
+              ? `${t("form.positive")} (${bgTraps.count})`
+              : t("form.negative")}
           </p>
           <p>
-            <strong>مصائد ذكية:</strong>{" "}
-            {smartTraps.isPositive ? `ايجابي (${smartTraps.count})` : "سلبي"}
+            <strong>{t("form.smartTraps")}:</strong>{" "}
+            {smartTraps.isPositive
+              ? `${t("form.positive")} (${smartTraps.count})`
+              : t("form.negative")}
           </p>
           {coordinates && (
             <p>
-              <strong>الإحداثيات:</strong> {coordinates.latitude.toFixed(6)},{" "}
+              <strong>{t("form.coordinates")}:</strong> {coordinates.latitude.toFixed(6)},{" "}
               {coordinates.longitude.toFixed(6)}
             </p>
           )}
           {comment && (
             <p>
-              <strong>الملاحظات:</strong> {comment}
+              <strong>{t("form.comment")}:</strong> {comment}
             </p>
           )}
         </div>
         <p className="text-gray-600 mb-6 text-center">
-          هل أنت متأكد من حفظ هذه البيانات؟
+          {t("form.confirmBody")}
         </p>
         <div className="flex justify-center space-x-4 rtl:space-x-reverse">
           <button
             onClick={onCancel}
             disabled={isSubmitting}
             className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 transition-colors">
-            إلغاء
+            {t("form.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -791,7 +798,7 @@ function ConfirmationModal({
             {isSubmitting && (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             )}
-            <span>{isSubmitting ? "جاري الحفظ..." : "تأكيد"}</span>
+            <span>{isSubmitting ? t("form.saving") : t("form.confirm")}</span>
           </button>
         </div>
       </div>

@@ -17,6 +17,7 @@ import {
 import { useToast } from "../contexts/ToastContext";
 import { getPestControlData, exportReport } from "../services/api";
 import ReactDOM from "react-dom";
+import { useTranslation } from "react-i18next";
 
 interface DashboardData {
   dailyReports: any[];
@@ -118,6 +119,7 @@ function getWeekRange(dateStr: string) {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<
     "daily" | "weekly" | "monthly" | "detailed"
@@ -161,7 +163,7 @@ export default function AdminDashboard() {
       setDashboardData(data);
       setAllReports(data.detailedReports || []);
     } catch (error) {
-      showToast("حدث خطأ أثناء تحميل البيانات", "error");
+      showToast(t("dashboard.loadError"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -180,17 +182,18 @@ export default function AdminDashboard() {
     try {
       await exportReport(report, type, customFilters || filters);
       showToast(
-        `تم تصدير التقرير ${
-          type === "daily"
-            ? "اليومي"
-            : type === "weekly"
-            ? "الأسبوعي"
-            : "الشهري"
-        } بنجاح`,
+        t("dashboard.exportOk", {
+          type:
+            type === "daily"
+              ? t("dashboard.daily")
+              : type === "weekly"
+              ? t("dashboard.weekly")
+              : t("dashboard.monthly"),
+        }),
         "success"
       );
     } catch (error) {
-      showToast("حدث خطأ أثناء تصدير التقرير", "error");
+      showToast(t("dashboard.exportError"), "error");
     }
   };
 
@@ -214,26 +217,26 @@ export default function AdminDashboard() {
   const handleDownloadDetailedReport = async (report: any) => {
     try {
       await exportReport(report, "detailed", { ...filters, id: report._id });
-      showToast("تم تصدير التقرير المفصل بنجاح", "success");
+      showToast(t("dashboard.exportDetailedOk"), "success");
     } catch (error) {
-      showToast("حدث خطأ أثناء تصدير التقرير", "error");
+      showToast(t("dashboard.exportError"), "error");
     }
   };
 
   const handleSearch = async () => {
     if (!searchFilters.startDate) {
-      showToast("يرجى تحديد تاريخ البداية على الأقل", "error");
+      showToast(t("dashboard.needStartDate"), "error");
       return;
     }
     if (new Date(searchFilters.startDate) > new Date(today)) {
-      showToast("لا يمكن البحث في تواريخ مستقبلية", "error");
+      showToast(t("dashboard.noFuture"), "error");
       return;
     }
     if (
       searchFilters.endDate &&
       new Date(searchFilters.startDate) > new Date(searchFilters.endDate)
     ) {
-      showToast("تاريخ البداية يجب أن يكون قبل تاريخ النهاية", "error");
+      showToast(t("dashboard.startBeforeEnd"), "error");
       return;
     }
     // Filter allReports by date and municipalities
@@ -264,7 +267,7 @@ export default function AdminDashboard() {
       const saturday = new Date(sunday);
       saturday.setDate(sunday.getDate() + 6);
       const format = (dt: Date) => dt.toISOString().split("T")[0];
-      return `${format(sunday)} إلى ${format(saturday)}`;
+      return `${format(sunday)}|${format(saturday)}`;
     };
     const getMonth = (r: any) => {
       const d = new Date(r.date);
@@ -300,7 +303,7 @@ export default function AdminDashboard() {
       totalReports: filtered.length,
     });
     setShowSearchResults(true);
-    showToast(`تم العثور على ${filtered.length} تقرير`, "success");
+    showToast(t("dashboard.found", { count: filtered.length }), "success");
   };
 
   if (isLoading) {
@@ -308,7 +311,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center min-h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري تحميل البيانات...</p>
+          <p className="text-gray-600">{t("dashboard.loading")}</p>
         </div>
       </div>
     );
@@ -364,9 +367,9 @@ export default function AdminDashboard() {
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            لوحة الإدارة
+            {t("dashboard.title")}
           </h2>
-          <p className="text-gray-600">إحصائيات وتقارير شاملة لمكافحة الآفات</p>
+          <p className="text-gray-600">{t("dashboard.subtitle")}</p>
         </div>
       </div>
 
@@ -374,12 +377,12 @@ export default function AdminDashboard() {
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <Search className="w-5 h-5 ml-2" />
-          البحث في التقارير
+          {t("dashboard.searchTitle")}
         </h3>
         <div className="grid md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              تاريخ البداية *
+              {t("dashboard.startDate")}
             </label>
             <input
               type="date"
@@ -397,7 +400,7 @@ export default function AdminDashboard() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              تاريخ النهاية (اختياري)
+              {t("dashboard.endDate")}
             </label>
             <input
               type="date"
@@ -418,7 +421,7 @@ export default function AdminDashboard() {
               onClick={handleSearch}
               className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse">
               <Search className="w-4 h-4" />
-              <span>بحث</span>
+              <span>{t("dashboard.search")}</span>
             </button>
           </div>
         </div>
@@ -426,7 +429,7 @@ export default function AdminDashboard() {
         {/* Search Districts Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            البلديات المحددة للبحث
+            {t("dashboard.searchMunicipalities")}
           </label>
           <div className="flex flex-wrap gap-2">
             <button
@@ -445,8 +448,8 @@ export default function AdminDashboard() {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}>
               {searchFilters.districts.length === municipalities.length
-                ? "إلغاء تحديد الكل"
-                : "تحديد الكل"}
+                ? t("dashboard.deselectAll")
+                : t("dashboard.selectAll")}
             </button>
             {municipalities.map((municipality) => (
               <button
@@ -463,8 +466,11 @@ export default function AdminDashboard() {
           </div>
           <p className="text-xs text-gray-500 mt-1">
             {searchFilters.districts.length === 0
-              ? "جميع البلديات"
-              : `${searchFilters.districts.length} من ${municipalities.length} محدد`}
+              ? t("dashboard.allMunicipalities")
+              : t("dashboard.selectedCount", {
+                  count: searchFilters.districts.length,
+                  total: municipalities.length,
+                })}
           </p>
         </div>
 
@@ -472,12 +478,18 @@ export default function AdminDashboard() {
           <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <div className="flex items-center justify-between">
               <p className="text-sm text-blue-800">
-                نتائج البحث: {searchResults?.totalReports || 0} تقرير
+                {t("dashboard.searchResults", {
+                  count: searchResults?.totalReports || 0,
+                })}
                 {searchFilters.startDate && (
-                  <span className="mr-2">من {searchFilters.startDate}</span>
+                  <span className="mr-2">
+                    {t("dashboard.from")} {searchFilters.startDate}
+                  </span>
                 )}
                 {searchFilters.endDate && (
-                  <span className="mr-2">إلى {searchFilters.endDate}</span>
+                  <span className="mr-2">
+                    {t("dashboard.to")} {searchFilters.endDate}
+                  </span>
                 )}
               </p>
               <button
@@ -486,7 +498,7 @@ export default function AdminDashboard() {
                   setSearchResults(null);
                 }}
                 className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                إظهار جميع التقارير
+                {t("dashboard.showAll")}
               </button>
             </div>
           </div>
@@ -498,10 +510,10 @@ export default function AdminDashboard() {
         <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="flex space-x-2 rtl:space-x-reverse px-2 sm:px-6 min-w-max md:space-x-8">
             {[
-              { key: "daily", label: "التقارير اليومية", icon: Calendar },
-              { key: "weekly", label: "التقارير الأسبوعية", icon: BarChart3 },
-              { key: "monthly", label: "التقارير الشهرية", icon: TrendingUp },
-              { key: "detailed", label: "التقارير المفصلة", icon: FileText },
+              { key: "daily", label: t("dashboard.tabDaily"), icon: Calendar },
+              { key: "weekly", label: t("dashboard.tabWeekly"), icon: BarChart3 },
+              { key: "monthly", label: t("dashboard.tabMonthly"), icon: TrendingUp },
+              { key: "detailed", label: t("dashboard.tabDetailed"), icon: FileText },
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -522,12 +534,12 @@ export default function AdminDashboard() {
         {currentStats && !showSearchResults && (
           <div className="p-4 sm:p-6 border-b border-gray-200">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-              إحصائيات{" "}
+              {t("dashboard.stats")}{" "}
               {activeTab === "daily"
-                ? "يومية"
+                ? t("dashboard.statsDaily")
                 : activeTab === "weekly"
-                ? "أسبوعية"
-                : "شهرية"}
+                ? t("dashboard.statsWeekly")
+                : t("dashboard.statsMonthly")}
               {statsDateRange && (
                 <span className="text-xs sm:text-sm font-normal text-gray-600 mr-2">
                   ({statsDateRange})
@@ -539,7 +551,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm text-blue-600 font-medium">
-                      إجمالي التسجيلات
+                      {t("dashboard.totalRecords")}
                     </p>
                     <p className="text-lg sm:text-2xl font-bold text-blue-900">
                       {currentStats.totalRecords}
@@ -552,7 +564,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm text-green-600 font-medium">
-                      إجمالي المواقع
+                      {t("dashboard.totalSites")}
                     </p>
                     <p className="text-lg sm:text-2xl font-bold text-green-900">
                       {currentStats.totalSites}
@@ -565,7 +577,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm text-orange-600 font-medium">
-                      الموقع الأعلى
+                      {t("dashboard.highestSite")}
                     </p>
                     <p className="text-xs sm:text-sm font-bold text-orange-900">
                       {currentStats.highestSite.type}
@@ -581,7 +593,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs sm:text-sm text-purple-600 font-medium">
-                      البلدية الأكثر نشاطاً
+                      {t("dashboard.mostActive")}
                     </p>
                     <p className="text-sm sm:text-lg font-bold text-purple-900">
                       {currentStats.mostActiveDistrict}
@@ -597,23 +609,21 @@ export default function AdminDashboard() {
         {/* Reports List */}
         <div className="p-2 sm:p-6">
           <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">
-            {showSearchResults ? "نتائج البحث - " : ""}
+            {showSearchResults ? t("dashboard.searchPrefix") : ""}
             {activeTab === "detailed"
-              ? "التقارير المفصلة"
-              : `التقارير ${
-                  activeTab === "daily"
-                    ? "اليومية"
-                    : activeTab === "weekly"
-                    ? "الأسبوعية"
-                    : "الشهرية"
-                }`}
+              ? t("dashboard.reportsDetailed")
+              : activeTab === "daily"
+              ? t("dashboard.reportsDaily")
+              : activeTab === "weekly"
+              ? t("dashboard.reportsWeekly")
+              : t("dashboard.reportsMonthly")}
           </h4>
           {currentReports.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">
                 {showSearchResults
-                  ? "لا توجد تقارير تطابق معايير البحث"
-                  : "لا توجد تقارير متاحة"}
+                  ? t("dashboard.noMatch")
+                  : t("dashboard.noReports")}
               </p>
             </div>
           ) : (
@@ -633,10 +643,13 @@ export default function AdminDashboard() {
                             {`${report.workerName} - ${report.date} - ${report.municipality}`}
                           </h5>
                           <p className="text-xs sm:text-sm text-gray-600">
-                            {`الحي: ${report.district} | نوع المكافحة: ${report.controlType}`}
+                            {t("dashboard.districtLine", {
+                              district: report.district,
+                              type: report.controlType,
+                            })}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600">
-                            إجمالي المواقع:{" "}
+                            {t("dashboard.totalSitesLabel")}:{" "}
                             {(
                               Object.values(report.siteCounts || {}) as number[]
                             ).reduce((a: number, b: number) => a + b, 0)}
@@ -647,13 +660,13 @@ export default function AdminDashboard() {
                             onClick={() => handleViewDetailedReport(report)}
                             className="bg-blue-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
                             <Eye className="w-4 h-4" />
-                            <span>عرض</span>
+                            <span>{t("dashboard.view")}</span>
                           </button>
                           <button
                             onClick={() => handleDownloadDetailedReport(report)}
                             className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
                             <Download className="w-4 h-4" />
-                            <span>تحميل</span>
+                            <span>{t("dashboard.download")}</span>
                           </button>
                         </div>
                       </div>
@@ -684,28 +697,29 @@ export default function AdminDashboard() {
                     let title = "";
                     let dateRange = "";
                     if (activeTab === "daily") {
-                      title = `تقرير يومي - ${group.date}`;
+                      title = t("dashboard.dailyReport", { date: group.date });
                       dateRange = group.date;
                     } else if (activeTab === "weekly") {
                       const firstReportDate = group.reports?.[0]?.date || "";
                       const weekRange = firstReportDate
                         ? getWeekRange(firstReportDate)
                         : { start: "", end: "" };
-                      title = `تقرير أسبوعي - الأسبوع من ${weekRange.start} إلى ${weekRange.end}`;
-                      dateRange = `${weekRange.start} إلى ${weekRange.end}`;
+                      title = t("dashboard.weeklyReport", {
+                        start: weekRange.start,
+                        end: weekRange.end,
+                      });
+                      dateRange = `${weekRange.start} ${t("dashboard.to")} ${weekRange.end}`;
                     } else if (activeTab === "monthly") {
                       const [year, month] = group.month.split("-");
-                      const computedTitle = `تقرير شهري - ${year}/${parseInt(
-                        month,
-                        10
-                      )}`;
-                      title = computedTitle;
+                      title = t("dashboard.monthlyReport", {
+                        year,
+                        month: parseInt(month, 10),
+                      });
                       const firstDay = `${year}-${month}-01`;
-                      // Fix: get last day of month correctly
                       const lastDay = new Date(Number(year), Number(month), 0)
                         .toISOString()
                         .split("T")[0];
-                      dateRange = `${firstDay} إلى ${lastDay}`;
+                      dateRange = `${firstDay} ${t("dashboard.to")} ${lastDay}`;
                     }
                     return (
                       <div
@@ -719,10 +733,10 @@ export default function AdminDashboard() {
                             {dateRange}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600 mb-1">
-                            إجمالي المواقع: {totalSites}
+                            {t("dashboard.totalSitesLabel")}: {totalSites}
                           </p>
                           <p className="text-xs text-gray-500">
-                            البلديات: {allMunicipalities.join(", ")}
+                            {t("dashboard.municipalities")}: {allMunicipalities.join(", ")}
                           </p>
                         </div>
                         <div className="flex space-x-2 rtl:space-x-reverse">
@@ -730,7 +744,7 @@ export default function AdminDashboard() {
                             onClick={() => handleViewReport(group)}
                             className="bg-blue-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
                             <Eye className="w-4 h-4" />
-                            <span>عرض</span>
+                            <span>{t("dashboard.view")}</span>
                           </button>
                           <button
                             onClick={() =>
@@ -759,7 +773,7 @@ export default function AdminDashboard() {
                             }
                             className="bg-green-600 text-white px-2 sm:px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1 rtl:space-x-reverse text-xs sm:text-sm">
                             <Download className="w-4 h-4" />
-                            <span>تحميل</span>
+                            <span>{t("dashboard.download")}</span>
                           </button>
                         </div>
                       </div>
@@ -802,6 +816,7 @@ function ReportModal({
   onClose: () => void;
   onDownload: () => void;
 }) {
+  const { t } = useTranslation();
   React.useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -863,16 +878,19 @@ function ReportModal({
     const weekRange = firstReportDate
       ? getWeekRange(firstReportDate)
       : { start: "", end: "" };
-    dateRange = `${weekRange.start} إلى ${weekRange.end}`;
+    dateRange = `${weekRange.start} ${t("dashboard.to")} ${weekRange.end}`;
   } else if (report.month) {
     // Monthly group
     const [year, month] = report.month.split("-");
-    const computedTitle = `تقرير شهري - ${year}/${parseInt(month, 10)}`;
+    const computedTitle = t("dashboard.monthlyReport", {
+      year,
+      month: parseInt(month, 10),
+    });
     const firstDay = `${year}-${month}-01`;
     const lastDay = new Date(Number(year), Number(month), 0)
       .toISOString()
       .split("T")[0];
-    dateRange = `${firstDay} إلى ${lastDay}`;
+    dateRange = `${firstDay} ${t("dashboard.to")} ${lastDay}`;
     modalStats = {
       ...modalStats,
       title: computedTitle,
@@ -896,7 +914,7 @@ function ReportModal({
               onClick={onDownload}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 rtl:space-x-reverse">
               <Download className="w-4 h-4" />
-              <span>تحميل</span>
+              <span>{t("dashboard.download")}</span>
             </button>
             <button
               onClick={onClose}
@@ -908,54 +926,56 @@ function ReportModal({
 
         <div className="p-6 flex-1 min-h-0 overflow-auto">
           <div className="mb-4">
-            <p className="text-sm text-gray-600">الفترة: {dateRange}</p>
             <p className="text-sm text-gray-600">
-              إجمالي المواقع: {modalStats.totalSites}
+              {t("dashboard.period")}: {dateRange}
             </p>
             <p className="text-sm text-gray-600">
-              الموقع الأعلى:{" "}
+              {t("dashboard.totalSitesLabel")}: {modalStats.totalSites}
+            </p>
+            <p className="text-sm text-gray-600">
+              {t("dashboard.highestSite")}:{" "}
               {modalStats.highestSite?.type
                 ? `${modalStats.highestSite.type} (${modalStats.highestSite.count})`
-                : "غير متوفر"}
+                : t("dashboard.unavailable")}
             </p>
             <p className="text-sm text-gray-600">
-              البلدية الأكثر نشاطاً:{" "}
-              {modalStats.mostActiveDistrict || "غير متوفر"}
+              {t("dashboard.mostActive")}:{" "}
+              {modalStats.mostActiveDistrict || t("dashboard.unavailable")}
             </p>
             {modalStats.workerName && (
               <p className="text-sm text-gray-600">
-                الأخصائي: {modalStats.workerName}
+                {t("dashboard.specialist")}: {modalStats.workerName}
               </p>
             )}
             {modalStats.controlType && (
               <p className="text-sm text-gray-600">
-                نوع المكافحة: {modalStats.controlType}
+                {t("form.controlType")}: {modalStats.controlType}
               </p>
             )}
             {modalStats.bgTraps && (
               <p className="text-sm text-gray-600">
-                مصائد BG brow:{" "}
+                {t("form.bgTraps")}:{" "}
                 {modalStats.bgTraps.isPositive
-                  ? `ايجابي (${modalStats.bgTraps.count})`
-                  : "سلبي"}
+                  ? `${t("form.positive")} (${modalStats.bgTraps.count})`
+                  : t("form.negative")}
               </p>
             )}
             {modalStats.smartTraps && (
               <p className="text-sm text-gray-600">
-                مصائد ذكية:{" "}
+                {t("form.smartTraps")}:{" "}
                 {modalStats.smartTraps.isPositive
-                  ? `ايجابي (${modalStats.smartTraps.count})`
-                  : "سلبي"}
+                  ? `${t("form.positive")} (${modalStats.smartTraps.count})`
+                  : t("form.negative")}
               </p>
             )}
             {modalStats.comment && (
               <p className="text-sm text-gray-600">
-                الملاحظات: {modalStats.comment}
+                {t("dashboard.notes")}: {modalStats.comment}
               </p>
             )}
             {modalStats.coordinates && (
               <p className="text-sm text-gray-600">
-                الإحداثيات: {modalStats.coordinates.latitude.toFixed(6)},{" "}
+                {t("form.coordinates")}: {modalStats.coordinates.latitude.toFixed(6)},{" "}
                 {modalStats.coordinates.longitude.toFixed(6)}
               </p>
             )}
@@ -966,7 +986,7 @@ function ReportModal({
               <thead className="bg-gray-100 sticky top-0">
                 <tr>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    نوع الموقع
+                    {t("dashboard.siteType")}
                   </th>
                   {municipalities.map((municipality) => (
                     <th
@@ -976,7 +996,7 @@ function ReportModal({
                     </th>
                   ))}
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-100">
-                    المجموع
+                    {t("dashboard.totalCol")}
                   </th>
                 </tr>
               </thead>
@@ -1012,7 +1032,7 @@ function ReportModal({
                 {/* Totals Row */}
                 <tr className="bg-blue-100 font-bold sticky bottom-0">
                   <td className="px-4 py-3 text-sm font-bold text-gray-900">
-                    المجموع
+                    {t("dashboard.totalCol")}
                   </td>
                   {municipalities.map((municipality) => {
                     const municipalityTotal = siteTypes.reduce(
@@ -1058,6 +1078,7 @@ function DetailedReportModal({
   onClose: () => void;
   onDownload: () => void;
 }) {
+  const { t } = useTranslation();
   React.useEffect(() => {
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -1073,14 +1094,14 @@ function DetailedReportModal({
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
           <h3 className="text-xl font-bold text-gray-900">
-            تقرير مفصل - {report.workerName}
+            {t("dashboard.detailedTitle", { name: report.workerName })}
           </h3>
           <div className="flex items-center space-x-2 rtl:space-x-reverse">
             <button
               onClick={onDownload}
               className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2 rtl:space-x-reverse">
               <Download className="w-4 h-4" />
-              <span>تحميل</span>
+              <span>{t("dashboard.download")}</span>
             </button>
             <button
               onClick={onClose}
@@ -1094,33 +1115,33 @@ function DetailedReportModal({
           {/* Basic Information */}
           <div className="mb-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              المعلومات الأساسية
+              {t("dashboard.basicInfo")}
             </h4>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">
-                  <strong>التاريخ:</strong> {report.date}
+                  <strong>{t("form.date")}:</strong> {report.date}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>اسم الأخصائي:</strong> {report.workerName}
+                  <strong>{t("form.workerName")}:</strong> {report.workerName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>البلدية:</strong> {report.municipality}
+                  <strong>{t("form.municipality")}:</strong> {report.municipality}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>الحي:</strong> {report.district}
+                  <strong>{t("form.district")}:</strong> {report.district}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  <strong>نوع المكافحة:</strong> {report.controlType}
+                  <strong>{t("form.controlType")}:</strong> {report.controlType}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>إجمالي المواقع:</strong> {report.totalSites}
+                  <strong>{t("dashboard.totalSitesLabel")}:</strong> {report.totalSites}
                 </p>
                 {report.coordinates && (
                   <p className="text-sm text-gray-600">
-                    <strong>الإحداثيات:</strong>{" "}
+                    <strong>{t("form.coordinates")}:</strong>{" "}
                     {report.coordinates.latitude.toFixed(6)},{" "}
                     {report.coordinates.longitude.toFixed(6)}
                   </p>
@@ -1132,30 +1153,30 @@ function DetailedReportModal({
           {/* Trap Information */}
           <div className="mb-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              المصائد
+              {t("form.traps")}
             </h4>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h5 className="font-medium text-gray-900 mb-2">
-                  مصائد BG brow
+                  {t("form.bgTraps")}
                 </h5>
                 <p className="text-sm text-gray-600">
-                  الحالة: {report.bgTraps?.isPositive ? "ايجابي" : "سلبي"}
+                  {t("dashboard.status")}: {report.bgTraps?.isPositive ? t("form.positive") : t("form.negative")}
                 </p>
                 {report.bgTraps?.isPositive && (
                   <p className="text-sm text-gray-600">
-                    العدد: {report.bgTraps.count}
+                    {t("form.count")}: {report.bgTraps.count}
                   </p>
                 )}
               </div>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h5 className="font-medium text-gray-900 mb-2">مصائد ذكية</h5>
+                <h5 className="font-medium text-gray-900 mb-2">{t("form.smartTraps")}</h5>
                 <p className="text-sm text-gray-600">
-                  الحالة: {report.smartTraps?.isPositive ? "ايجابي" : "سلبي"}
+                  {t("dashboard.status")}: {report.smartTraps?.isPositive ? t("form.positive") : t("form.negative")}
                 </p>
                 {report.smartTraps?.isPositive && (
                   <p className="text-sm text-gray-600">
-                    العدد: {report.smartTraps.count}
+                    {t("form.count")}: {report.smartTraps.count}
                   </p>
                 )}
               </div>
@@ -1165,7 +1186,7 @@ function DetailedReportModal({
           {/* Site Counts */}
           <div className="mb-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">
-              المواقع المستهدفة
+              {t("form.sites")}
             </h4>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {siteTypes.map((siteType) => (
@@ -1185,7 +1206,7 @@ function DetailedReportModal({
           {report.comment && (
             <div className="mb-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                الملاحظات
+                {t("dashboard.notes")}
               </h4>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="text-gray-700">{report.comment}</p>

@@ -1,5 +1,6 @@
 const PestControlReport = require("../Models/PestControlReport");
 const ExcelJS = require("exceljs");
+const { t } = require("../lib/i18n");
 
 // Site type mapping to handle data migration from old names to new names
 const siteTypeMapping = {
@@ -40,9 +41,9 @@ exports.submitPestControlReport = async (req, res) => {
     );
     const report = new PestControlReport({ ...data, totalSites });
     await report.save();
-    res.status(201).json({ message: "Report submitted successfully", report });
+    res.status(201).json({ message: t(req, "success.reportSubmitted"), report });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: t(req, "errors.submitFailed") });
   }
 };
 
@@ -170,7 +171,7 @@ exports.getPestControlReports = async (req, res) => {
       statistics,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: t(req, "errors.fetchFailed") });
   }
 };
 
@@ -1225,6 +1226,6 @@ exports.exportPestControlReportsExcel = async (req, res) => {
     res.end();
   } catch (error) {
     console.error("Excel export error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: t(req, "errors.exportFailed") });
   }
 };

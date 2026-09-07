@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Shield, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../contexts/ToastContext";
 
 interface AdminLoginProps {
@@ -7,6 +8,7 @@ interface AdminLoginProps {
 }
 
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [credentials, setCredentials] = useState({
     username: "",
@@ -19,7 +21,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     e.preventDefault();
 
     if (!credentials.username || !credentials.password) {
-      showToast("يرجى إدخال اسم المستخدم وكلمة المرور", "error");
+      showToast(t("login.fillBoth"), "error");
       return;
     }
 
@@ -27,10 +29,10 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     try {
       const success = await onLogin(credentials.username, credentials.password);
       if (!success) {
-        showToast("اسم المستخدم أو كلمة المرور غير صحيحة", "error");
+        showToast(t("login.invalid"), "error");
       }
     } catch (error) {
-      showToast("حدث خطأ أثناء تسجيل الدخول", "error");
+      showToast(t("login.error"), "error");
     } finally {
       setIsLoading(false);
     }
@@ -44,15 +46,15 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             <Shield className="w-8 h-8 text-blue-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            دخول لوحة الإدارة
+            {t("login.title")}
           </h2>
-          <p className="text-gray-600">يرجى إدخال بيانات الدخول</p>
+          <p className="text-gray-600">{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              اسم المستخدم
+              {t("login.username")}
             </label>
             <input
               type="text"
@@ -64,14 +66,14 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                 }))
               }
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="أدخل اسم المستخدم"
+              placeholder={t("login.usernamePlaceholder")}
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              كلمة المرور
+              {t("login.password")}
             </label>
             <div className="relative">
               <input
@@ -84,7 +86,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                   }))
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-12"
-                placeholder="أدخل كلمة المرور"
+                placeholder={t("login.passwordPlaceholder")}
                 required
               />
               <button
@@ -104,14 +106,30 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
             type="submit"
             disabled={isLoading}
             className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium">
-            {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+            {isLoading ? t("login.submitting") : t("login.submit")}
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 text-center">
-            للحصول على بيانات الدخول، يرجى التواصل مع مدير النظام
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+          <p className="font-semibold text-gray-900 mb-2 text-center">
+            {t("login.demoHeading")}
           </p>
+          <p className="text-xs text-gray-500 text-center mb-3">
+            {t("login.demoHint")}
+          </p>
+          <div className="space-y-1 text-gray-800 select-text">
+            <p>
+              <span className="font-medium">{t("login.role")}:</span>{" "}
+              {t("login.adminRole")}
+            </p>
+            <p>
+              <span className="font-medium">{t("login.username")}:</span> admin
+            </p>
+            <p>
+              <span className="font-medium">{t("login.password")}:</span>{" "}
+              admin123
+            </p>
+          </div>
         </div>
       </div>
     </div>

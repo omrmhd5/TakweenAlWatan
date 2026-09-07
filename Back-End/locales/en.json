@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "invalidCredentials": "Invalid username or password",
+    "server": "Server error",
+    "submitFailed": "Failed to save the report",
+    "fetchFailed": "Failed to fetch reports",
+    "exportFailed": "Failed to export the report"
+  },
+  "success": {
+    "login": "Login successful",
+    "reportSubmitted": "Report submitted successfully"
+  }
+}

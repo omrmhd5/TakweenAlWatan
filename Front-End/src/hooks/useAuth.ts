@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
+import i18n from "../i18n";
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -15,19 +16,24 @@ export function useAuth() {
     password: string
   ): Promise<boolean> => {
     try {
-      const response = await axios.post(`${serverURL}/api/auth/login`, {
-        username,
-        password,
-      });
+      const lang = i18n.language === "en" ? "en" : "ar";
+      const response = await axios.post(
+        `${serverURL}/api/auth/login`,
+        { username, password },
+        {
+          headers: {
+            "Accept-Language": lang,
+            "X-Language": lang,
+          },
+        }
+      );
 
       if (response.data && response.data.token) {
         localStorage.setItem("admin_token", response.data.token);
         setIsAuthenticated(true);
         return true;
-      } else {
-        console.error("No token received from server");
-        return false;
       }
+      return false;
     } catch (error) {
       console.error("Login failed:", error);
       return false;

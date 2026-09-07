@@ -17,6 +17,7 @@ const PestControlReportSchema = new mongoose.Schema(
       count: { type: Number, required: true },
     },
     comment: { type: String },
+    totalSites: { type: Number },
     coordinates: {
       latitude: { type: Number },
       longitude: { type: Number },

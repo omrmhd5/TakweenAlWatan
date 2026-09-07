@@ -1,5 +1,14 @@
-// Backend API base URL
+import i18n from "../i18n";
+
 const API_URL = import.meta.env.VITE_BACKEND_URL;
+
+function langHeaders(): HeadersInit {
+  const lang = i18n.language === "en" ? "en" : "ar";
+  return {
+    "Accept-Language": lang,
+    "X-Language": lang,
+  };
+}
 
 // Site type mapping to handle data migration from old names to new names
 const siteTypeMapping: { [key: string]: string } = {
@@ -153,10 +162,10 @@ export async function submitPestControlData(
 ): Promise<void> {
   const res = await fetch(`${API_URL}/api/reports`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...langHeaders() },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to submit pest control report");
+  if (!res.ok) throw new Error(i18n.t("api.submitFail"));
 }
 
 export async function getPestControlData(filters: any): Promise<any> {
@@ -166,8 +175,10 @@ export async function getPestControlData(filters: any): Promise<any> {
   if (filters.districts && filters.districts.length > 0) {
     filters.districts.forEach((d: string) => params.append("districts", d));
   }
-  const res = await fetch(`${API_URL}/api/reports?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch pest control reports");
+  const res = await fetch(`${API_URL}/api/reports?${params.toString()}`, {
+    headers: langHeaders(),
+  });
+  if (!res.ok) throw new Error(i18n.t("api.fetchFail"));
   const data = await res.json();
 
   // Transform site counts for each report to handle old data format
@@ -195,8 +206,8 @@ export async function exportReport(
   }
   if (filters.id) params.append("id", filters.id);
   const url = `${API_URL}/api/reports/export?${params.toString()}`;
-  const res = await fetch(url, { method: "GET" });
-  if (!res.ok) throw new Error("Failed to export report");
+  const res = await fetch(url, { method: "GET", headers: langHeaders() });
+  if (!res.ok) throw new Error(i18n.t("api.exportFail"));
   const blob = await res.blob();
   const a = document.createElement("a");
   a.href = window.URL.createObjectURL(blob);

@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "seed:demo": "node scripts/seed-demo.js --local",
+    "seed:demo:local": "node scripts/seed-demo.js --local",
+    "seed:demo:remote": "node scripts/seed-demo.js --remote",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

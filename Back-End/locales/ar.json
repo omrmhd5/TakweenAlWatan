@@ -1,0 +1,13 @@
+{
+  "errors": {
+    "invalidCredentials": "اسم المستخدم أو كلمة المرور غير صحيحة",
+    "server": "خطأ في الخادم",
+    "submitFailed": "فشل في حفظ التقرير",
+    "fetchFailed": "فشل في جلب التقارير",
+    "exportFailed": "فشل في تصدير التقرير"
+  },
+  "success": {
+    "login": "تم تسجيل الدخول بنجاح",
+    "reportSubmitted": "تم إرسال التقرير بنجاح"
+  }
+}
