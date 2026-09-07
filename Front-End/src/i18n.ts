@@ -5,16 +5,22 @@ import en from "./locales/en.json";
 
 const STORAGE_KEY = "language";
 
-export function getStoredLanguage(): "ar" | "en" {
-  if (typeof window === "undefined") return "ar";
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored === "en" ? "en" : "ar";
+export function normalizeLanguage(lng?: string): "ar" | "en" {
+  return lng?.toLowerCase().startsWith("en") ? "en" : "ar";
 }
 
-export function applyDocumentLanguage(lng: string) {
-  const lang = lng === "en" ? "en" : "ar";
+export function getStoredLanguage(): "ar" | "en" {
+  if (typeof window === "undefined") return "ar";
+  return normalizeLanguage(localStorage.getItem(STORAGE_KEY) || "ar");
+}
+
+export function applyDocumentLanguage(lng?: string) {
+  const lang = normalizeLanguage(lng);
+  const dir = lang === "ar" ? "rtl" : "ltr";
   document.documentElement.lang = lang;
-  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.documentElement.dir = dir;
+  document.body.lang = lang;
+  document.body.dir = dir;
   document.title = lang === "ar" ? ar.meta.title : en.meta.title;
 }
 
@@ -28,11 +34,12 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-applyDocumentLanguage(i18n.language);
+applyDocumentLanguage(i18n.resolvedLanguage || i18n.language);
 
 i18n.on("languageChanged", (lng) => {
-  localStorage.setItem(STORAGE_KEY, lng === "en" ? "en" : "ar");
-  applyDocumentLanguage(lng);
+  const lang = normalizeLanguage(lng);
+  localStorage.setItem(STORAGE_KEY, lang);
+  applyDocumentLanguage(lang);
 });
 
 export default i18n;

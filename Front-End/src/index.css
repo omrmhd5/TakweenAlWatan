@@ -3,20 +3,22 @@
 @tailwind utilities;
 
 * {
-  font-family: 'Cairo', sans-serif;
+  font-family: "Cairo", sans-serif;
 }
 
-body {
-  direction: rtl;
+select,
+input,
+textarea {
+  text-align: start;
 }
 
-/* RTL Support */
-.rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 1;
+th,
+td {
+  text-align: start;
 }
 
 /* Custom animations */
-@keyframes slide-in-from-right {
+@keyframes slide-in-from-end {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -27,19 +29,37 @@ body {
   }
 }
 
+[dir="rtl"] .animate-in.slide-in-from-end {
+  animation-name: slide-in-from-end;
+}
+
+@keyframes slide-in-from-start {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+[dir="ltr"] .animate-in.slide-in-from-end {
+  animation-name: slide-in-from-start;
+}
+
 .animate-in {
   animation-fill-mode: both;
 }
 
-.slide-in-from-right {
-  animation-name: slide-in-from-right;
+.slide-in-from-end {
+  animation-duration: 300ms;
 }
 
 .duration-300 {
   animation-duration: 300ms;
 }
 
-/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -57,20 +77,6 @@ body {
   background: #94a3b8;
 }
 
-/* Form inputs RTL */
 input[type="number"] {
   text-align: center;
-}
-
-select, input {
-  text-align: right;
-}
-
-/* Table RTL */
-table {
-  direction: rtl;
-}
-
-th, td {
-  text-align: right;
 }

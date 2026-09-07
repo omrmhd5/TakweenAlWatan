@@ -1,14 +1,7 @@
-import i18n from "../i18n";
+import i18n, { normalizeLanguage } from "../i18n";
+import { BACKEND_URL, langHeaders } from "../lib/backend";
 
-const API_URL = import.meta.env.VITE_BACKEND_URL;
-
-function langHeaders(): HeadersInit {
-  const lang = i18n.language === "en" ? "en" : "ar";
-  return {
-    "Accept-Language": lang,
-    "X-Language": lang,
-  };
-}
+const API_URL = BACKEND_URL;
 
 // Site type mapping to handle data migration from old names to new names
 const siteTypeMapping: { [key: string]: string } = {

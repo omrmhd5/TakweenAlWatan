@@ -18,6 +18,7 @@ import { useToast } from "../contexts/ToastContext";
 import { getPestControlData, exportReport } from "../services/api";
 import ReactDOM from "react-dom";
 import { useTranslation } from "react-i18next";
+import { SITE_TYPES, MUNICIPALITIES, labelOf } from "../lib/domain";
 
 interface DashboardData {
   dailyReports: any[];
@@ -49,37 +50,8 @@ interface DashboardData {
   };
 }
 
-const municipalities = [
-  "العزيزية",
-  "المعابدة",
-  "الشرائع",
-  "العتيبة",
-  "الزيمة",
-  "المشاعر المقدسة",
-];
-const siteTypes = [
-  "المواقع المستكشفة",
-  "المواقع السلبية",
-  "المواقع الإيجابية",
-  "المواقع الدائمة",
-  "تجمعات مياه",
-  "سقيا الطيور",
-  "مناهل مكشوفه",
-  "احواش مهجورة",
-  "مباني تحت الانشاء",
-  "حدائق عامة",
-  "مرافق عامة",
-  "الاستراحات",
-  "المساجد",
-  "حوض اسمنتي",
-  "الإطارات",
-  "مزهريات",
-  "تسريبات مياه",
-  "البرادات",
-  "مجاري تصريف",
-  "الحالات المباشرة",
-  "بلاغات 940",
-];
+const municipalities = [...MUNICIPALITIES];
+const siteTypes = [...SITE_TYPES];
 
 // Utility to get current week (Sunday-Saturday) date range
 function getCurrentWeekRange() {
@@ -376,7 +348,7 @@ export default function AdminDashboard() {
       {/* Search Section */}
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Search className="w-5 h-5 ml-2" />
+          <Search className="w-5 h-5 me-2" />
           {t("dashboard.searchTitle")}
         </h3>
         <div className="grid md:grid-cols-3 gap-4 mb-4">
@@ -460,7 +432,7 @@ export default function AdminDashboard() {
                     ? "bg-blue-600 text-white"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}>
-                {municipality}
+                {labelOf(t, "municipalities", municipality)}
               </button>
             ))}
           </div>
@@ -482,12 +454,12 @@ export default function AdminDashboard() {
                   count: searchResults?.totalReports || 0,
                 })}
                 {searchFilters.startDate && (
-                  <span className="mr-2">
+                  <span className="me-2">
                     {t("dashboard.from")} {searchFilters.startDate}
                   </span>
                 )}
                 {searchFilters.endDate && (
-                  <span className="mr-2">
+                  <span className="me-2">
                     {t("dashboard.to")} {searchFilters.endDate}
                   </span>
                 )}
@@ -541,7 +513,7 @@ export default function AdminDashboard() {
                 ? t("dashboard.statsWeekly")
                 : t("dashboard.statsMonthly")}
               {statsDateRange && (
-                <span className="text-xs sm:text-sm font-normal text-gray-600 mr-2">
+                <span className="text-xs sm:text-sm font-normal text-gray-600 me-2">
                   ({statsDateRange})
                 </span>
               )}
@@ -580,7 +552,7 @@ export default function AdminDashboard() {
                       {t("dashboard.highestSite")}
                     </p>
                     <p className="text-xs sm:text-sm font-bold text-orange-900">
-                      {currentStats.highestSite.type}
+                      {labelOf(t, "sites", currentStats.highestSite.type)}
                     </p>
                     <p className="text-base sm:text-lg font-bold text-orange-900">
                       ({currentStats.highestSite.count})
@@ -596,7 +568,7 @@ export default function AdminDashboard() {
                       {t("dashboard.mostActive")}
                     </p>
                     <p className="text-sm sm:text-lg font-bold text-purple-900">
-                      {currentStats.mostActiveDistrict}
+                      {labelOf(t, "municipalities", currentStats.mostActiveDistrict)}
                     </p>
                   </div>
                   <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
@@ -640,12 +612,12 @@ export default function AdminDashboard() {
                         className="bg-gray-50 rounded-lg p-2 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between">
                         <div className="flex-1 mb-2 sm:mb-0">
                           <h5 className="font-semibold text-gray-900 text-sm sm:text-base">
-                            {`${report.workerName} - ${report.date} - ${report.municipality}`}
+                            {`${report.workerName} - ${report.date} - ${labelOf(t, "municipalities", report.municipality)}`}
                           </h5>
                           <p className="text-xs sm:text-sm text-gray-600">
                             {t("dashboard.districtLine", {
-                              district: report.district,
-                              type: report.controlType,
+                              district: labelOf(t, "districts", report.district),
+                              type: labelOf(t, "controlTypes", report.controlType),
                             })}
                           </p>
                           <p className="text-xs sm:text-sm text-gray-600">
@@ -736,7 +708,10 @@ export default function AdminDashboard() {
                             {t("dashboard.totalSitesLabel")}: {totalSites}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {t("dashboard.municipalities")}: {allMunicipalities.join(", ")}
+                            {t("dashboard.municipalities")}:{" "}
+                            {allMunicipalities
+                              .map((m) => labelOf(t, "municipalities", String(m)))
+                              .join(", ")}
                           </p>
                         </div>
                         <div className="flex space-x-2 rtl:space-x-reverse">
@@ -935,12 +910,14 @@ function ReportModal({
             <p className="text-sm text-gray-600">
               {t("dashboard.highestSite")}:{" "}
               {modalStats.highestSite?.type
-                ? `${modalStats.highestSite.type} (${modalStats.highestSite.count})`
+                ? `${labelOf(t, "sites", modalStats.highestSite.type)} (${modalStats.highestSite.count})`
                 : t("dashboard.unavailable")}
             </p>
             <p className="text-sm text-gray-600">
               {t("dashboard.mostActive")}:{" "}
-              {modalStats.mostActiveDistrict || t("dashboard.unavailable")}
+              {modalStats.mostActiveDistrict
+                ? labelOf(t, "municipalities", modalStats.mostActiveDistrict)
+                : t("dashboard.unavailable")}
             </p>
             {modalStats.workerName && (
               <p className="text-sm text-gray-600">
@@ -985,14 +962,14 @@ function ReportModal({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-100 sticky top-0">
                 <tr>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-start text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("dashboard.siteType")}
                   </th>
                   {municipalities.map((municipality) => (
                     <th
                       key={municipality}
                       className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {municipality}
+                      {labelOf(t, "municipalities", municipality)}
                     </th>
                   ))}
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-100">
@@ -1014,7 +991,7 @@ function ReportModal({
                       key={siteType}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {siteType}
+                        {labelOf(t, "sites", siteType)}
                       </td>
                       {municipalities.map((municipality) => (
                         <td
@@ -1126,15 +1103,18 @@ function DetailedReportModal({
                   <strong>{t("form.workerName")}:</strong> {report.workerName}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>{t("form.municipality")}:</strong> {report.municipality}
+                  <strong>{t("form.municipality")}:</strong>{" "}
+                  {labelOf(t, "municipalities", report.municipality)}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <strong>{t("form.district")}:</strong> {report.district}
+                  <strong>{t("form.district")}:</strong>{" "}
+                  {labelOf(t, "districts", report.district)}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">
-                  <strong>{t("form.controlType")}:</strong> {report.controlType}
+                  <strong>{t("form.controlType")}:</strong>{" "}
+                  {labelOf(t, "controlTypes", report.controlType)}
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>{t("dashboard.totalSitesLabel")}:</strong> {report.totalSites}
@@ -1192,7 +1172,7 @@ function DetailedReportModal({
               {siteTypes.map((siteType) => (
                 <div key={siteType} className="bg-gray-50 p-3 rounded-lg">
                   <h5 className="font-medium text-gray-900 text-sm mb-1">
-                    {siteType}
+                    {labelOf(t, "sites", siteType)}
                   </h5>
                   <p className="text-lg font-bold text-blue-600">
                     {report.siteCounts?.[siteType] || 0}

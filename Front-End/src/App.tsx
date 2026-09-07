@@ -10,6 +10,8 @@ import {
   Menu,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { normalizeLanguage } from "./i18n";
+import { SITE_TYPES, MUNICIPALITIES, labelOf } from "./lib/domain";
 import FieldWorkerForm from "./components/FieldWorkerForm";
 import AdminLogin from "./components/AdminLogin";
 import AdminDashboard from "./components/AdminDashboard";
@@ -20,7 +22,9 @@ import { ToastProvider } from "./contexts/ToastContext";
 import Toast from "./components/Toast";
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const dir = lang === "ar" ? "rtl" : "ltr";
   const { isAuthenticated, login, logout } = useAuth();
   const [currentView, setCurrentView] = useState<"home" | "form" | "admin">(
     "home"
@@ -30,6 +34,8 @@ function App() {
   return (
     <ToastProvider>
       <div
+        dir={dir}
+        lang={lang}
         className="min-h-screen bg-cover bg-center bg-fixed"
         style={{ backgroundImage: "url(/BG.jpg)" }}>
         <div className="min-h-screen bg-white/90 backdrop-blur-sm">
@@ -43,7 +49,7 @@ function App() {
                     alt={t("brand.logoAlt")}
                     className="h-12 w-auto"
                   />
-                  <div className="text-right rtl:text-right">
+                  <div className="text-start">
                     <h1 className="text-xl font-bold text-gray-900">
                       {t("brand.name")}
                     </h1>
@@ -164,37 +170,6 @@ function HomePage({
   isAuthenticated: boolean;
 }) {
   const { t } = useTranslation();
-  const sites = [
-    "المواقع المستكشفة",
-    "المواقع السلبية",
-    "المواقع الإيجابية",
-    "المواقع الدائمة",
-    "تجمعات مياه",
-    "سقيا الطيور",
-    "مناهل مكشوفه",
-    "احواش مهجورة",
-    "مباني تحت الانشاء",
-    "حدائق عامة",
-    "مرافق عامة",
-    "الاستراحات",
-    "المساجد",
-    "حوض اسمنتي",
-    "الإطارات",
-    "مزهريات",
-    "تسريبات مياه",
-    "البرادات",
-    "مجاري تصريف",
-    "الحالات المباشرة",
-    "بلاغات 940",
-  ];
-  const districts = [
-    "العزيزية",
-    "المعابدة",
-    "الشرائع",
-    "العتيبة",
-    "الزيمة",
-    "المشاعر المقدسة",
-  ];
 
   return (
     <div className="text-center space-y-12">
@@ -303,11 +278,13 @@ function HomePage({
           {t("home.sitesTitle")}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 text-sm">
-          {sites.map((site) => (
+          {SITE_TYPES.map((site) => (
             <div
               key={site}
               className="bg-gray-50 p-3 rounded-lg text-center border transition-transform duration-200 hover:scale-105 hover:shadow-lg cursor-pointer">
-              <span className="font-medium text-gray-700">{site}</span>
+              <span className="font-medium text-gray-700">
+                {labelOf(t, "sites", site)}
+              </span>
             </div>
           ))}
         </div>
@@ -318,12 +295,14 @@ function HomePage({
           {t("home.muniTitle")}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {districts.map((district) => (
+          {MUNICIPALITIES.map((municipality) => (
             <div
-              key={district}
+              key={municipality}
               className="bg-blue-50 p-4 rounded-lg text-center border border-blue-200 transition-transform duration-200 hover:scale-105 hover:shadow-xl hover:border-blue-400 cursor-pointer">
               <MapPin className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-              <span className="font-semibold text-blue-900">{district}</span>
+              <span className="font-semibold text-blue-900">
+                {labelOf(t, "municipalities", municipality)}
+              </span>
             </div>
           ))}
         </div>

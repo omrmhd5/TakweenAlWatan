@@ -15,45 +15,15 @@ import { useToast } from "../contexts/ToastContext";
 import { submitPestControlData } from "../services/api";
 import { districtsByMunicipality, controlTypes } from "../services/api";
 import { useTranslation } from "react-i18next";
+import { SITE_TYPES, MUNICIPALITIES, labelOf } from "../lib/domain";
 
 interface Coordinates {
   latitude: number;
   longitude: number;
 }
 
-const siteTypes = [
-  "المواقع المستكشفة",
-  "المواقع السلبية",
-  "المواقع الإيجابية",
-  "المواقع الدائمة",
-  "تجمعات مياه",
-  "سقيا الطيور",
-  "مناهل مكشوفه",
-  "احواش مهجورة",
-  "مباني تحت الانشاء",
-  "حدائق عامة",
-  "مرافق عامة",
-  "الاستراحات",
-  "المساجد",
-  "حوض اسمنتي",
-  "الإطارات",
-  "مزهريات",
-  "تسريبات مياه",
-  "البرادات",
-  "مجاري تصريف",
-  "الحالات المباشرة",
-  "بلاغات 940",
-];
-
-// Updated to only include the 6 specific municipalities
-const municipalities = [
-  "العزيزية",
-  "المعابدة",
-  "الشرائع",
-  "العتيبة",
-  "الزيمة",
-  "المشاعر المقدسة",
-];
+const siteTypes = SITE_TYPES;
+const municipalities = [...MUNICIPALITIES];
 
 export default function FieldWorkerForm() {
   const { t } = useTranslation();
@@ -305,7 +275,7 @@ export default function FieldWorkerForm() {
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Calendar className="w-4 h-4 inline ml-2" />
+              <Calendar className="w-4 h-4 inline me-2" />
               {t("form.date")}
             </label>
             <input
@@ -321,7 +291,7 @@ export default function FieldWorkerForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Shield className="w-4 h-4 inline ml-2" />
+              <Shield className="w-4 h-4 inline me-2" />
               {t("form.controlType")} *
             </label>
             <select
@@ -332,7 +302,7 @@ export default function FieldWorkerForm() {
               <option value="">{t("form.selectControlType")}</option>
               {controlTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {labelOf(t, "controlTypes", type)}
                 </option>
               ))}
             </select>
@@ -340,7 +310,7 @@ export default function FieldWorkerForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <MapPin className="w-4 h-4 inline ml-2" />
+              <MapPin className="w-4 h-4 inline me-2" />
               {t("form.municipality")} *
             </label>
             <select
@@ -356,7 +326,7 @@ export default function FieldWorkerForm() {
               <option value="">{t("form.selectMunicipality")}</option>
               {municipalities.map((municipality) => (
                 <option key={municipality} value={municipality}>
-                  {municipality}
+                  {labelOf(t, "municipalities", municipality)}
                 </option>
               ))}
             </select>
@@ -364,7 +334,7 @@ export default function FieldWorkerForm() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <MapPin className="w-4 h-4 inline ml-2" />
+              <MapPin className="w-4 h-4 inline me-2" />
               {t("form.district")} *
             </label>
             <div className="space-y-2">
@@ -377,7 +347,7 @@ export default function FieldWorkerForm() {
                 <option value="">{t("form.selectDistrict")}</option>
                 {availableDistricts.map((district) => (
                   <option key={district} value={district}>
-                    {district}
+                    {labelOf(t, "districts", district)}
                   </option>
                 ))}
               </select>
@@ -402,7 +372,7 @@ export default function FieldWorkerForm() {
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <User className="w-4 h-4 inline ml-2" />
+              <User className="w-4 h-4 inline me-2" />
               {t("form.workerName")} *
             </label>
             <input
@@ -480,7 +450,7 @@ export default function FieldWorkerForm() {
                       disabled={!isTrapControl}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <span className="mr-2 text-sm font-medium text-gray-700">
+                    <span className="me-2 text-sm font-medium text-gray-700">
                       {t("form.positive")}
                     </span>
                   </label>
@@ -497,7 +467,7 @@ export default function FieldWorkerForm() {
                       disabled={!isTrapControl}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <span className="mr-2 text-sm font-medium text-gray-700">
+                    <span className="me-2 text-sm font-medium text-gray-700">
                       {t("form.negative")}
                     </span>
                   </label>
@@ -542,7 +512,7 @@ export default function FieldWorkerForm() {
                       disabled={!isTrapControl}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <span className="mr-2 text-sm font-medium text-gray-700">
+                    <span className="me-2 text-sm font-medium text-gray-700">
                       {t("form.positive")}
                     </span>
                   </label>
@@ -559,7 +529,7 @@ export default function FieldWorkerForm() {
                       disabled={!isTrapControl}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <span className="mr-2 text-sm font-medium text-gray-700">
+                    <span className="me-2 text-sm font-medium text-gray-700">
                       {t("form.negative")}
                     </span>
                   </label>
@@ -590,7 +560,7 @@ export default function FieldWorkerForm() {
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-6 text-center">
             {t("form.sites")}
-            <span className="text-sm font-normal text-gray-600 mr-2">
+            <span className="text-sm font-normal text-gray-600 me-2">
               ({t("form.total")}: {totalSites})
             </span>
           </h3>
@@ -599,10 +569,10 @@ export default function FieldWorkerForm() {
             {siteTypes.map((siteType, index) => (
               <div key={siteType} className="bg-gray-50 p-4 rounded-lg border">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full ml-2">
+                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full me-2">
                     {index + 1}
                   </span>
-                  {siteType}
+                  {labelOf(t, "sites", siteType)}
                 </label>
                 <input
                   type="number"
@@ -624,7 +594,7 @@ export default function FieldWorkerForm() {
         {/* Comment Field */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            <MessageSquare className="w-4 h-4 inline ml-2" />
+            <MessageSquare className="w-4 h-4 inline me-2" />
             {t("form.comment")}
           </label>
           <textarea
@@ -743,13 +713,16 @@ function ConfirmationModal({
             <strong>{t("form.date")}:</strong> {date}
           </p>
           <p>
-            <strong>{t("form.controlType")}:</strong> {controlType}
+            <strong>{t("form.controlType")}:</strong>{" "}
+            {labelOf(t, "controlTypes", controlType)}
           </p>
           <p>
-            <strong>{t("form.municipality")}:</strong> {municipality}
+            <strong>{t("form.municipality")}:</strong>{" "}
+            {labelOf(t, "municipalities", municipality)}
           </p>
           <p>
-            <strong>{t("form.district")}:</strong> {district}
+            <strong>{t("form.district")}:</strong>{" "}
+            {labelOf(t, "districts", district)}
           </p>
           <p>
             <strong>{t("form.workerName")}:</strong> {workerName}

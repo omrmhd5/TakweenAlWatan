@@ -85,14 +85,14 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                     password: e.target.value,
                   }))
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pl-12"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pe-12"
                 placeholder={t("login.passwordPlaceholder")}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                className="absolute end-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
                 ) : (

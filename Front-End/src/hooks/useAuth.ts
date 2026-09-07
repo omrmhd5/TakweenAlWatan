@@ -1,10 +1,11 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-import i18n from "../i18n";
+import i18n, { normalizeLanguage } from "../i18n";
+import { BACKEND_URL } from "../lib/backend";
 
 export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const serverURL = import.meta.env.VITE_BACKEND_URL;
+  const serverURL = BACKEND_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -16,7 +17,7 @@ export function useAuth() {
     password: string
   ): Promise<boolean> => {
     try {
-      const lang = i18n.language === "en" ? "en" : "ar";
+      const lang = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
       const response = await axios.post(
         `${serverURL}/api/auth/login`,
         { username, password },
