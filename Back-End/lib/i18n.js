@@ -3,12 +3,24 @@ const en = require("../locales/en.json");
 
 const catalogs = { ar, en };
 
-function getLang(req) {
-  const header = (req.headers["x-language"] || req.headers["accept-language"] || "ar")
-    .toString()
-    .slice(0, 2)
+function parseLang(raw) {
+  if (raw == null || raw === "") return null;
+  const first = String(Array.isArray(raw) ? raw[0] : raw)
+    .split(",")[0]
+    .trim()
     .toLowerCase();
-  return header === "en" ? "en" : "ar";
+  if (first.startsWith("en")) return "en";
+  if (first.startsWith("ar")) return "ar";
+  return null;
+}
+
+function getLang(req) {
+  return (
+    parseLang(req.query?.lang) ||
+    parseLang(req.headers["x-language"]) ||
+    parseLang(req.headers["accept-language"]) ||
+    "ar"
+  );
 }
 
 function lookup(lang, path) {

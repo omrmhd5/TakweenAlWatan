@@ -196,6 +196,7 @@ exports.exportPestControlReportsExcel = async (req, res) => {
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(t(req, "excel.sheet"));
+    worksheet.views = [{ state: "normal", rightToLeft: getLang(req) === "ar" }];
 
     // Define all possible site types and municipalities
     const siteTypes = [

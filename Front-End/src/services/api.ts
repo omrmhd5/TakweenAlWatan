@@ -1,4 +1,4 @@
-import i18n, { normalizeLanguage } from "../i18n";
+import i18n, { getStoredLanguage } from "../i18n";
 import { BACKEND_URL, langHeaders } from "../lib/backend";
 
 const API_URL = BACKEND_URL;
@@ -198,6 +198,7 @@ export async function exportReport(
     filters.districts.forEach((d: string) => params.append("districts", d));
   }
   if (filters.id) params.append("id", filters.id);
+  params.append("lang", getStoredLanguage());
   const url = `${API_URL}/api/reports/export?${params.toString()}`;
   const res = await fetch(url, { method: "GET", headers: langHeaders() });
   if (!res.ok) throw new Error(i18n.t("api.exportFail"));
